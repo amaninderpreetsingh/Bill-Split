@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { Upload, Receipt, Users, X, ImageIcon, Loader2, UserPlus, Trash2, DollarSign, ChevronDown } from "lucide-react";
+import { Upload, Receipt, Users, X, ImageIcon, Loader2, UserPlus, Trash2, DollarSign, ChevronDown, Pencil, Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +60,9 @@ const Index = () => {
   const [itemAssignments, setItemAssignments] = useState<ItemAssignment>({});
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>("checkboxes");
   const [customTip, setCustomTip] = useState<string>("");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemName, setEditingItemName] = useState<string>("");
+  const [editingItemPrice, setEditingItemPrice] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -135,6 +138,102 @@ const Index = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleStartOver = () => {
+    setSelectedFile(null);
+    setImagePreview(null);
+    setBillData(null);
+    setPeople([]);
+    setItemAssignments({});
+    setCustomTip("");
+    setEditingItemId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    toast({
+      title: "Reset complete",
+      description: "Starting fresh!",
+    });
+  };
+
+  const handleEditItem = (itemId: string, itemName: string, itemPrice: number) => {
+    setEditingItemId(itemId);
+    setEditingItemName(itemName);
+    setEditingItemPrice(itemPrice.toString());
+  };
+
+  const handleSaveItemEdit = () => {
+    if (!billData || !editingItemId) return;
+
+    const price = parseFloat(editingItemPrice);
+    if (isNaN(price) || price < 0) {
+      toast({
+        title: "Invalid price",
+        description: "Please enter a valid price.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!editingItemName.trim()) {
+      toast({
+        title: "Invalid name",
+        description: "Item name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedItems = billData.items.map(item =>
+      item.id === editingItemId
+        ? { ...item, name: editingItemName.trim(), price }
+        : item
+    );
+
+    // Recalculate subtotal
+    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price, 0);
+
+    setBillData({
+      ...billData,
+      items: updatedItems,
+      subtotal: newSubtotal,
+      total: newSubtotal + billData.tax + (parseFloat(customTip) || billData.tip),
+    });
+
+    setEditingItemId(null);
+    setEditingItemName("");
+    setEditingItemPrice("");
+  };
+
+  const handleCancelItemEdit = () => {
+    setEditingItemId(null);
+    setEditingItemName("");
+    setEditingItemPrice("");
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    if (!billData) return;
+
+    const updatedItems = billData.items.filter(item => item.id !== itemId);
+    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price, 0);
+
+    setBillData({
+      ...billData,
+      items: updatedItems,
+      subtotal: newSubtotal,
+      total: newSubtotal + billData.tax + (parseFloat(customTip) || billData.tip),
+    });
+
+    // Remove item from assignments
+    const newAssignments = { ...itemAssignments };
+    delete newAssignments[itemId];
+    setItemAssignments(newAssignments);
+
+    toast({
+      title: "Item deleted",
+      description: "Item removed from the bill.",
+    });
   };
 
   const handleAnalyzeReceipt = async () => {
@@ -305,21 +404,32 @@ const Index = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Upload a photo of your receipt and let AI do the math. Fair splitting with tax and tip included.
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLoadMockData}
-              className="mt-2"
-            >
-              Load Test Data
-            </Button>
+            <div className="flex gap-2 justify-center mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLoadMockData}
+              >
+                Load Test Data
+              </Button>
+              {billData && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStartOver}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Start Over
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Upload Card */}
           <Card
             className={`p-8 shadow-medium border-2 border-dashed transition-all duration-300 ${
               isDragging
-                ? 'border-primary bg-primary/5'
+                ? 'border-primary bg-primary/10 scale-[1.02]'
                 : imagePreview
                 ? 'border-primary/40'
                 : 'border-primary/20 hover:border-primary/40'
@@ -388,14 +498,14 @@ const Index = () => {
 
                 <Button
                   size="lg"
-                  className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                   onClick={handleAnalyzeReceipt}
                   disabled={isAnalyzing}
                 >
                   {isAnalyzing ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Analyzing...
+                      Analyzing Receipt...
                     </>
                   ) : (
                     <>
@@ -404,6 +514,11 @@ const Index = () => {
                     </>
                   )}
                 </Button>
+                {isAnalyzing && (
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    This may take a few moments. AI is extracting items from your receipt...
+                  </p>
+                )}
               </div>
             )}
           </Card>
@@ -412,20 +527,21 @@ const Index = () => {
           {billData && (
             <div className="mt-12 space-y-6">
               {/* People Management */}
-              <Card className="p-6">
+              <Card className="p-4 md:p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Users className="w-5 h-5 text-primary" />
                   <h3 className="text-xl font-semibold">People</h3>
                 </div>
 
-                <div className="flex gap-2 mb-4">
+                <div className="flex flex-col sm:flex-row gap-2 mb-4">
                   <Input
                     placeholder="Enter person's name"
                     value={newPersonName}
                     onChange={(e) => setNewPersonName(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddPerson()}
+                    className="flex-1"
                   />
-                  <Button onClick={handleAddPerson}>
+                  <Button onClick={handleAddPerson} className="sm:w-auto">
                     <UserPlus className="w-4 h-4 mr-2" />
                     Add
                   </Button>
@@ -459,15 +575,15 @@ const Index = () => {
               </Card>
 
               {/* Items Table */}
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
+              <Card className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2">
                     <Receipt className="w-5 h-5 text-primary" />
                     <h3 className="text-xl font-semibold">Bill Items</h3>
                   </div>
 
                   {people.length > 0 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <span className="text-sm text-muted-foreground">Assignment mode:</span>
                       <RadioGroup
                         value={assignmentMode}
@@ -487,23 +603,55 @@ const Index = () => {
                   )}
                 </div>
 
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
+                        <TableHead className="min-w-[150px]">Item</TableHead>
+                        <TableHead className="text-right min-w-[80px]">Price</TableHead>
                         {people.length > 0 && (
-                          <TableHead>Assigned To</TableHead>
+                          <TableHead className="min-w-[200px]">Assigned To</TableHead>
                         )}
+                        <TableHead className="w-[100px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {billData.items.map((item) => (
+                      {billData.items.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={people.length > 0 ? 4 : 3} className="text-center py-8 text-muted-foreground">
+                            No items found. Try analyzing another receipt or add items manually.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        billData.items.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {editingItemId === item.id ? (
+                              <Input
+                                value={editingItemName}
+                                onChange={(e) => setEditingItemName(e.target.value)}
+                                className="h-8"
+                              />
+                            ) : (
+                              item.name
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
-                            ${item.price.toFixed(2)}
+                            {editingItemId === item.id ? (
+                              <div className="relative ml-auto w-24">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input
+                                  type="number"
+                                  value={editingItemPrice}
+                                  onChange={(e) => setEditingItemPrice(e.target.value)}
+                                  className="h-8 text-right pl-5"
+                                  step="0.01"
+                                  min="0"
+                                />
+                              </div>
+                            ) : (
+                              `$${item.price.toFixed(2)}`
+                            )}
                           </TableCell>
                           {people.length > 0 && (
                             <TableCell>
@@ -562,8 +710,45 @@ const Index = () => {
                               )}
                             </TableCell>
                           )}
+                          <TableCell>
+                            {editingItemId === item.id ? (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={handleSaveItemEdit}
+                                >
+                                  <Check className="w-4 h-4 text-green-600" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={handleCancelItemEdit}
+                                >
+                                  <X className="w-4 h-4 text-muted-foreground" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditItem(item.id, item.name, item.price)}
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDeleteItem(item.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
                         </TableRow>
-                      ))}
+                      )))}
                     </TableBody>
                   </Table>
                 </div>
@@ -584,26 +769,22 @@ const Index = () => {
                     <span className="text-muted-foreground">Tax:</span>
                     <span className="font-medium">${billData.tax.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Tip:</span>
+                  <div className="flex justify-between items-center text-base">
+                    <span className="text-muted-foreground font-semibold">Tip:</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-xs text-muted-foreground">
-                        (Original: ${billData.tip.toFixed(2)})
-                      </span>
-                      <Input
-                        type="number"
-                        placeholder="Custom tip"
-                        value={customTip}
-                        onChange={(e) => setCustomTip(e.target.value)}
-                        className="w-24 h-8 text-right"
-                        step="0.01"
-                        min="0"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          placeholder={billData.tip.toFixed(2)}
+                          value={customTip}
+                          onChange={(e) => setCustomTip(e.target.value)}
+                          className="w-32 h-10 text-right text-base pl-6"
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Effective Tip:</span>
-                    <span className="font-medium">${effectiveTip.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
                     <span>Total:</span>
@@ -622,13 +803,13 @@ const Index = () => {
               )}
 
               {personTotals.length > 0 && (
-                <Card className="p-6">
+                <Card className="p-4 md:p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <DollarSign className="w-5 h-5 text-primary" />
                     <h3 className="text-xl font-semibold">Split Summary</h3>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {personTotals.map((pt) => (
                       <div
                         key={pt.personId}
@@ -645,8 +826,8 @@ const Index = () => {
                             <span>${pt.tax.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Tip:</span>
-                            <span>${pt.tip.toFixed(2)}</span>
+                            <span className="text-muted-foreground font-semibold">Tip:</span>
+                            <span className="font-semibold">${pt.tip.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
                             <span>Total:</span>

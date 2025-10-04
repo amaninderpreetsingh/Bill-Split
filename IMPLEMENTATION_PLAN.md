@@ -80,15 +80,15 @@ Build a web application that splits restaurant bills among multiple people. User
 
 ---
 
-### 📋 Checkpoint 6: Polish & Final Features
-- [ ] Allow manual editing of extracted items/prices
-- [ ] Add "Start Over" button to reset the flow
-- [ ] Improve mobile responsiveness
-- [ ] Polish error states and loading UI
+### ✅ Checkpoint 6: Polish & Final Features (COMPLETED)
+- [x] Allow manual editing of extracted items/prices
+- [x] Add "Start Over" button to reset the flow
+- [x] Improve mobile responsiveness
+- [x] Polish error states and loading UI
 
-**Status:** Not Started
-**Files to Create/Modify:**
-- TBD
+**Status:** Complete
+**Files Modified:**
+- `src/pages/Index.tsx` - Added inline item editing (name/price), delete items, Start Over button, mobile-responsive layouts, improved loading states with helper text, empty state handling, and enhanced drag-and-drop visual feedback
 
 ---
 
