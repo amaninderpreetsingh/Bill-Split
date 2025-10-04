@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeBillImage, BillData } from "@/services/gemini";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
@@ -65,6 +67,7 @@ const Index = () => {
   const [editingItemPrice, setEditingItemPrice] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const validateFile = (file: File): boolean => {
     const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
@@ -574,7 +577,7 @@ const Index = () => {
                 )}
               </Card>
 
-              {/* Items Table */}
+              {/* Items Table/Cards */}
               <Card className="p-4 md:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2">
@@ -582,7 +585,7 @@ const Index = () => {
                     <h3 className="text-xl font-semibold">Bill Items</h3>
                   </div>
 
-                  {people.length > 0 && (
+                  {people.length > 0 && !isMobile && (
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <span className="text-sm text-muted-foreground">Assignment mode:</span>
                       <RadioGroup
@@ -603,7 +606,124 @@ const Index = () => {
                   )}
                 </div>
 
-                <div className="rounded-md border overflow-x-auto">
+                {/* Mobile Card View */}
+                {isMobile ? (
+                  <div className="space-y-3">
+                    {billData.items.length === 0 ? (
+                      <p className="text-center py-8 text-muted-foreground">
+                        No items found. Try analyzing another receipt or add items manually.
+                      </p>
+                    ) : (
+                      billData.items.map((item) => (
+                        <Card key={item.id} className="p-4 space-y-3 border-2">
+                          {editingItemId === item.id ? (
+                            // Edit Mode
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground mb-1 block">Item Name</label>
+                                <Input
+                                  value={editingItemName}
+                                  onChange={(e) => setEditingItemName(e.target.value)}
+                                  className="text-base"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground mb-1 block">Price</label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                  <Input
+                                    type="number"
+                                    value={editingItemPrice}
+                                    onChange={(e) => setEditingItemPrice(e.target.value)}
+                                    className="text-base text-right pl-8"
+                                    step="0.01"
+                                    min="0"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  className="flex-1 bg-green-600 hover:bg-green-700"
+                                  onClick={handleSaveItemEdit}
+                                >
+                                  <Check className="w-4 h-4 mr-2" />
+                                  Save
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="flex-1"
+                                  onClick={handleCancelItemEdit}
+                                >
+                                  <X className="w-4 h-4 mr-2" />
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            // View Mode
+                            <>
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-base">{item.name}</h4>
+                                  <p className="text-xl font-bold text-primary mt-1">${item.price.toFixed(2)}</p>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEditItem(item.id, item.name, item.price)}
+                                    className="h-9 w-9 p-0"
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDeleteItem(item.id)}
+                                    className="h-9 w-9 p-0 text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {people.length > 0 && (
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-muted-foreground">Assign to:</label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {people.map((person) => {
+                                      const isAssigned = (itemAssignments[item.id] || []).includes(person.id);
+                                      return (
+                                        <Badge
+                                          key={person.id}
+                                          variant={isAssigned ? "default" : "outline"}
+                                          className={`cursor-pointer px-4 py-2 text-sm transition-all ${
+                                            isAssigned ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
+                                          }`}
+                                          onClick={() => handleItemAssignment(item.id, person.id, !isAssigned)}
+                                        >
+                                          {person.name}
+                                          {isAssigned && <Check className="w-3 h-3 ml-1" />}
+                                        </Badge>
+                                      );
+                                    })}
+                                  </div>
+                                  {(itemAssignments[item.id] || []).length > 0 && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Split between {(itemAssignments[item.id] || []).length} {(itemAssignments[item.id] || []).length === 1 ? 'person' : 'people'}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  // Desktop Table View
+                  <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -751,9 +871,10 @@ const Index = () => {
                       )))}
                     </TableBody>
                   </Table>
-                </div>
+                  </div>
+                )}
 
-                {people.length === 0 && (
+                {people.length === 0 && !isMobile && (
                   <p className="text-sm text-muted-foreground text-center py-4 mt-4">
                     Add people above to assign items
                   </p>
