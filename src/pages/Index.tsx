@@ -264,6 +264,27 @@ const Index = () => {
   // Load mock data for testing
   const handleLoadMockData = () => {
     setBillData(MOCK_BILL_DATA);
+    const newPeople: Person[] = [
+      {
+      id: `person-1`,
+      name: 'Aman',
+      },
+      {
+      id: `person-2`,
+      name: 'Simran',
+      },
+      {
+      id: `person-3`,
+      name: 'Karan',
+      },
+      {
+      id: `person-4`,
+      name: 'Dad',
+      },
+
+  ];
+
+    setPeople(newPeople);
     toast({
       title: "Mock data loaded",
       description: `Loaded ${MOCK_BILL_DATA.items.length} test items.`,
@@ -614,8 +635,17 @@ const Index = () => {
                         No items found. Try analyzing another receipt or add items manually.
                       </p>
                     ) : (
-                      billData.items.map((item) => (
-                        <Card key={item.id} className="p-4 space-y-3 border-2">
+                      billData.items.map((item) => {
+                        const hasAssignments = (itemAssignments[item.id] || []).length > 0;
+                        return (
+                        <Card
+                          key={item.id}
+                          className={`p-4 space-y-3 border-2 transition-all duration-300 ${
+                            hasAssignments
+                              ? 'border-primary shadow-lg shadow-primary/20 bg-primary/5'
+                              : 'border-border'
+                          }`}
+                        >
                           {editingItemId === item.id ? (
                             // Edit Mode
                             <div className="space-y-3">
@@ -709,16 +739,25 @@ const Index = () => {
                                     })}
                                   </div>
                                   {(itemAssignments[item.id] || []).length > 0 && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      Split between {(itemAssignments[item.id] || []).length} {(itemAssignments[item.id] || []).length === 1 ? 'person' : 'people'}
-                                    </p>
+                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                      <p className="font-medium">Split breakdown:</p>
+                                      {people.filter(p => (itemAssignments[item.id] || []).includes(p.id)).map((person) => {
+                                        const splitAmount = item.price / (itemAssignments[item.id] || []).length;
+                                        return (
+                                          <p key={person.id}>
+                                            {person.name}: ${splitAmount.toFixed(2)}
+                                          </p>
+                                        );
+                                      })}
+                                    </div>
                                   )}
                                 </div>
                               )}
                             </>
                           )}
                         </Card>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 ) : (
@@ -743,8 +782,17 @@ const Index = () => {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        billData.items.map((item) => (
-                        <TableRow key={item.id}>
+                        billData.items.map((item) => {
+                          const hasAssignments = (itemAssignments[item.id] || []).length > 0;
+                          return (
+                        <TableRow
+                          key={item.id}
+                          className={`transition-all duration-300 ${
+                            hasAssignments
+                              ? 'border-l-4 !border-l-primary bg-primary/5'
+                              : 'border-l-4 border-l-transparent'
+                          }`}
+                        >
                           <TableCell className="font-medium">
                             {editingItemId === item.id ? (
                               <Input
@@ -776,57 +824,96 @@ const Index = () => {
                           {people.length > 0 && (
                             <TableCell>
                               {assignmentMode === "checkboxes" ? (
-                                <div className="flex flex-wrap gap-4">
-                                  {people.map((person) => (
-                                    <div key={person.id} className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id={`${item.id}-${person.id}`}
-                                        checked={(itemAssignments[item.id] || []).includes(person.id)}
-                                        onCheckedChange={(checked) =>
-                                          handleItemAssignment(item.id, person.id, checked as boolean)
-                                        }
-                                      />
-                                      <label
-                                        htmlFor={`${item.id}-${person.id}`}
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                      >
-                                        {person.name}
-                                      </label>
+                                <div className="space-y-2">
+                                  <div className="flex flex-wrap gap-2">
+                                    {people.map((person) => {
+                                      const isAssigned = (itemAssignments[item.id] || []).includes(person.id);
+                                      return (
+                                        <Badge
+                                          key={person.id}
+                                          variant={isAssigned ? "default" : "outline"}
+                                          className={`cursor-pointer px-3 py-1.5 text-sm transition-all hover:scale-105 ${
+                                            isAssigned
+                                              ? "bg-primary text-primary-foreground shadow-md"
+                                              : "hover:bg-secondary hover:border-primary/50"
+                                          }`}
+                                          onClick={() => handleItemAssignment(item.id, person.id, !isAssigned)}
+                                        >
+                                          {person.name}
+                                          {isAssigned && <Check className="w-3 h-3 ml-1.5" />}
+                                        </Badge>
+                                      );
+                                    })}
+                                  </div>
+                                  {(itemAssignments[item.id] || []).length > 0 && (
+                                    <div className="text-xs text-muted-foreground space-y-0.5">
+                                      {people.filter(p => (itemAssignments[item.id] || []).includes(p.id)).map((person) => {
+                                        const splitAmount = item.price / (itemAssignments[item.id] || []).length;
+                                        return (
+                                          <p key={person.id}>
+                                            {person.name}: ${splitAmount.toFixed(2)}
+                                          </p>
+                                        );
+                                      })}
                                     </div>
-                                  ))}
+                                  )}
                                 </div>
                               ) : (
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-between">
-                                      {(itemAssignments[item.id] || []).length === 0
-                                        ? "Select people..."
-                                        : `${(itemAssignments[item.id] || []).length} selected`}
-                                      <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-64 p-0">
-                                    <div className="p-4 space-y-2">
-                                      {people.map((person) => (
-                                        <div key={person.id} className="flex items-center space-x-2">
-                                          <Checkbox
-                                            id={`dropdown-${item.id}-${person.id}`}
-                                            checked={(itemAssignments[item.id] || []).includes(person.id)}
-                                            onCheckedChange={(checked) =>
-                                              handleItemAssignment(item.id, person.id, checked as boolean)
-                                            }
-                                          />
-                                          <label
-                                            htmlFor={`dropdown-${item.id}-${person.id}`}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                                          >
-                                            {person.name}
-                                          </label>
-                                        </div>
-                                      ))}
+                                <div className="space-y-2">
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="outline" className="w-full justify-between hover:bg-secondary">
+                                        {(itemAssignments[item.id] || []).length === 0
+                                          ? "Select people..."
+                                          : `${(itemAssignments[item.id] || []).length} selected`}
+                                        <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-64 p-0">
+                                      <div className="p-2 space-y-1">
+                                        {people.map((person) => {
+                                          const isAssigned = (itemAssignments[item.id] || []).includes(person.id);
+                                          return (
+                                            <div
+                                              key={person.id}
+                                              className={`flex items-center space-x-3 px-3 py-2.5 rounded-md cursor-pointer transition-all ${
+                                                isAssigned
+                                                  ? "bg-primary/10 hover:bg-primary/20"
+                                                  : "hover:bg-secondary"
+                                              }`}
+                                              onClick={() => handleItemAssignment(item.id, person.id, !isAssigned)}
+                                            >
+                                              <div
+                                                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                                                  isAssigned
+                                                    ? "bg-primary border-primary"
+                                                    : "border-input"
+                                                }`}
+                                              >
+                                                {isAssigned && <Check className="w-3 h-3 text-primary-foreground" />}
+                                              </div>
+                                              <span className="text-sm font-medium flex-1">
+                                                {person.name}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                  {(itemAssignments[item.id] || []).length > 0 && (
+                                    <div className="text-xs text-muted-foreground space-y-0.5">
+                                      {people.filter(p => (itemAssignments[item.id] || []).includes(p.id)).map((person) => {
+                                        const splitAmount = item.price / (itemAssignments[item.id] || []).length;
+                                        return (
+                                          <p key={person.id}>
+                                            {person.name}: ${splitAmount.toFixed(2)}
+                                          </p>
+                                        );
+                                      })}
                                     </div>
-                                  </PopoverContent>
-                                </Popover>
+                                  )}
+                                </div>
                               )}
                             </TableCell>
                           )}
@@ -868,7 +955,8 @@ const Index = () => {
                             )}
                           </TableCell>
                         </TableRow>
-                      )))}
+                        );
+                      }))}
                     </TableBody>
                   </Table>
                   </div>
