@@ -70,9 +70,8 @@ const Index = () => {
             fileInputRef={upload.fileInputRef}
           />
 
-          {bill.billData && (
-            <div className="mt-12 space-y-6">
-              <PeopleManager
+          <div className="mt-12 space-y-6">
+            <PeopleManager
                 people={people.people}
                 newPersonName={people.newPersonName}
                 newPersonVenmoId={people.newPersonVenmoId}
@@ -117,31 +116,42 @@ const Index = () => {
                   onDelete={editor.deleteItem}
                   setEditingName={editor.setEditingItemName}
                   setEditingPrice={editor.setEditingItemPrice}
+                  isAdding={editor.isAdding}
+                  newItemName={editor.newItemName}
+                  newItemPrice={editor.newItemPrice}
+                  setNewItemName={editor.setNewItemName}
+                  setNewItemPrice={editor.setNewItemPrice}
+                  onStartAdding={editor.startAdding}
+                  onAddItem={editor.addItem}
+                  onCancelAdding={editor.cancelAdding}
                 />
 
-                {people.people.length === 0 && !isMobile && (
+                {people.people.length === 0 && !isMobile && bill.billData && (
                   <p className="text-sm text-muted-foreground text-center py-4 mt-4">
                     Add people above to assign items
                   </p>
                 )}
 
-                <BillSummary
-                  billData={bill.billData}
-                  customTip={bill.customTip}
-                  effectiveTip={bill.effectiveTip}
-                  onTipChange={bill.setCustomTip}
-                />
+                {bill.billData && (
+                  <BillSummary
+                    billData={bill.billData}
+                    customTip={bill.customTip}
+                    effectiveTip={bill.effectiveTip}
+                    onTipChange={bill.setCustomTip}
+                  />
+                )}
               </Card>
 
-              <SplitSummary
-                personTotals={bill.personTotals}
-                allItemsAssigned={bill.allItemsAssigned}
-                people={people.people}
-                billData={bill.billData}
-                itemAssignments={bill.itemAssignments}
-              />
+              {bill.billData && (
+                <SplitSummary
+                  personTotals={bill.personTotals}
+                  allItemsAssigned={bill.allItemsAssigned}
+                  people={people.people}
+                  billData={bill.billData}
+                  itemAssignments={bill.itemAssignments}
+                />
+              )}
             </div>
-          )}
 
           {!bill.billData && (
             <div className="grid md:grid-cols-3 gap-6 mt-12">

@@ -4,7 +4,7 @@ import { BillItemCard } from './BillItemCard';
 import { BillItemsTable } from './BillItemsTable';
 
 interface Props {
-  billData: BillData;
+  billData: BillData | null;
   people: Person[];
   itemAssignments: ItemAssignment;
   assignmentMode: AssignmentMode;
@@ -18,6 +18,14 @@ interface Props {
   onAssign: (itemId: string, personId: string, checked: boolean) => void;
   setEditingName: (name: string) => void;
   setEditingPrice: (price: string) => void;
+  isAdding: boolean;
+  newItemName: string;
+  newItemPrice: string;
+  setNewItemName: (name: string) => void;
+  setNewItemPrice: (price: string) => void;
+  onStartAdding: () => void;
+  onAddItem: () => void;
+  onCancelAdding: () => void;
 }
 
 export function BillItems(props: Props) {
@@ -26,30 +34,29 @@ export function BillItems(props: Props) {
   if (isMobile) {
     return (
       <div className="space-y-3">
-        {props.billData.items.length === 0 ? (
-          <p className="text-center py-8 text-muted-foreground">
-            No items found. Try analyzing another receipt or add items manually.
-          </p>
-        ) : (
-          props.billData.items.map((item) => (
-            <BillItemCard
-              key={item.id}
-              item={item}
-              people={props.people}
-              itemAssignments={props.itemAssignments}
-              isEditing={props.editingItemId === item.id}
-              editingName={props.editingItemName}
-              editingPrice={props.editingItemPrice}
-              onEdit={props.onEdit}
-              onSave={props.onSave}
-              onCancel={props.onCancel}
-              onDelete={props.onDelete}
-              onAssign={props.onAssign}
-              setEditingName={props.setEditingName}
-              setEditingPrice={props.setEditingPrice}
-            />
-          ))
-        )}
+        <BillItemCard
+          billData={props.billData}
+          people={props.people}
+          itemAssignments={props.itemAssignments}
+          editingItemId={props.editingItemId}
+          editingName={props.editingItemName}
+          editingPrice={props.editingItemPrice}
+          onEdit={props.onEdit}
+          onSave={props.onSave}
+          onCancel={props.onCancel}
+          onDelete={props.onDelete}
+          onAssign={props.onAssign}
+          setEditingName={props.setEditingName}
+          setEditingPrice={props.setEditingPrice}
+          isAdding={props.isAdding}
+          newItemName={props.newItemName}
+          newItemPrice={props.newItemPrice}
+          setNewItemName={props.setNewItemName}
+          setNewItemPrice={props.setNewItemPrice}
+          onStartAdding={props.onStartAdding}
+          onAddItem={props.onAddItem}
+          onCancelAdding={props.onCancelAdding}
+        />
       </div>
     );
   }

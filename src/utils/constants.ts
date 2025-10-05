@@ -17,7 +17,5 @@ export const MOCK_BILL_DATA: BillData = {
 
 export const MOCK_PEOPLE = [
   { id: 'person-1', name: 'Aman' },
-  { id: 'person-2', name: 'Simran' },
-  { id: 'person-3', name: 'Karan' },
-  { id: 'person-4', name: 'Dad' },
+  { id: 'person-2', name: 'Simran' }
 ];

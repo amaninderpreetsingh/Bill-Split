@@ -11,6 +11,9 @@ export function useItemEditor(
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItemName, setEditingItemName] = useState('');
   const [editingItemPrice, setEditingItemPrice] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState('');
   const { toast } = useToast();
 
   const editItem = (itemId: string, itemName: string, itemPrice: number) => {
@@ -86,6 +89,76 @@ export function useItemEditor(
     });
   };
 
+  const startAdding = () => {
+    setIsAdding(true);
+    setNewItemName('');
+    setNewItemPrice('');
+  };
+
+  const addItem = () => {
+    const price = parseFloat(newItemPrice);
+
+    if (!newItemName.trim()) {
+      toast({
+        title: 'Invalid name',
+        description: 'Item name cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isNaN(price) || price < 0) {
+      toast({
+        title: 'Invalid price',
+        description: 'Please enter a valid price.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newItem = {
+      id: `item-${Date.now()}`,
+      name: newItemName.trim(),
+      price: price,
+    };
+
+    if (!billData) {
+      // Create initial bill from scratch
+      const newBillData: BillData = {
+        items: [newItem],
+        subtotal: price,
+        tax: 0,
+        tip: 0,
+        total: price,
+      };
+      setBillData(newBillData);
+    } else {
+      // Add to existing bill
+      const updatedItems = [...billData.items, newItem];
+      const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price, 0);
+
+      setBillData({
+        ...billData,
+        items: updatedItems,
+        subtotal: newSubtotal,
+        total: newSubtotal + billData.tax + (parseFloat(customTip) || billData.tip),
+      });
+    }
+
+    toast({
+      title: 'Item added',
+      description: `${newItem.name} added to the bill.`,
+    });
+
+    cancelAdding();
+  };
+
+  const cancelAdding = () => {
+    setIsAdding(false);
+    setNewItemName('');
+    setNewItemPrice('');
+  };
+
   return {
     editingItemId,
     editingItemName,
@@ -96,5 +169,13 @@ export function useItemEditor(
     saveEdit,
     cancelEdit,
     deleteItem,
+    isAdding,
+    newItemName,
+    newItemPrice,
+    setNewItemName,
+    setNewItemPrice,
+    startAdding,
+    addItem,
+    cancelAdding,
   };
 }
