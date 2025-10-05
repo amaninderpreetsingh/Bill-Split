@@ -77,10 +77,13 @@ const Index = () => {
                 newPersonName={people.newPersonName}
                 newPersonVenmoId={people.newPersonVenmoId}
                 useNameAsVenmoId={people.useNameAsVenmoId}
+                saveToFriendsList={people.saveToFriendsList}
                 onNameChange={people.setNewPersonName}
                 onVenmoIdChange={people.setNewPersonVenmoId}
                 onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
+                onSaveToFriendsListChange={people.setSaveToFriendsList}
                 onAdd={people.addPerson}
+                onAddFromFriend={people.addFromFriend}
                 onRemove={handleRemovePerson}
               />
 

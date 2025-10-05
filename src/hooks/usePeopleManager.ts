@@ -9,6 +9,7 @@ export function usePeopleManager() {
   const [newPersonName, setNewPersonName] = useState('');
   const [newPersonVenmoId, setNewPersonVenmoId] = useState('');
   const [useNameAsVenmoId, setUseNameAsVenmoId] = useState(false);
+  const [saveToFriendsList, setSaveToFriendsList] = useState(false);
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const { toast } = useToast();
@@ -27,7 +28,7 @@ export function usePeopleManager() {
     }
   }, [user, profile?.venmoId]);
 
-  const addPerson = () => {
+  const addPerson = async () => {
     if (!newPersonName.trim()) {
       toast({
         title: 'Name required',
@@ -48,13 +49,58 @@ export function usePeopleManager() {
     };
 
     setPeople([...people, newPerson]);
+
+    // Save to friends list in Firestore if checked
+    if (saveToFriendsList && user) {
+      try {
+        const { doc, setDoc, arrayUnion } = await import('firebase/firestore');
+        const { db } = await import('@/config/firebase');
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+          friends: arrayUnion({
+            name: newPersonName.trim(),
+            venmoId: venmoId,
+          })
+        }, { merge: true });
+
+        toast({
+          title: 'Saved to friends',
+          description: `${newPersonName.trim()} has been saved to your friends list.`,
+        });
+      } catch (error) {
+        console.error('Error saving to friends:', error);
+        toast({
+          title: 'Error saving friend',
+          description: 'Could not save to friends list.',
+          variant: 'destructive',
+        });
+      }
+    }
+
     setNewPersonName('');
     setNewPersonVenmoId('');
     setUseNameAsVenmoId(false);
+    setSaveToFriendsList(false);
   };
 
   const removePerson = (personId: string) => {
     setPeople(people.filter(p => p.id !== personId));
+  };
+
+  const addFromFriend = (friend: { name: string; venmoId?: string }) => {
+    const newPerson: Person = {
+      id: `person-${Date.now()}`,
+      name: friend.name,
+      venmoId: friend.venmoId,
+    };
+
+    setPeople([...people, newPerson]);
+
+    toast({
+      title: 'Friend added',
+      description: `${friend.name} has been added to the bill.`,
+    });
   };
 
   return {
@@ -62,10 +108,13 @@ export function usePeopleManager() {
     newPersonName,
     newPersonVenmoId,
     useNameAsVenmoId,
+    saveToFriendsList,
     setNewPersonName,
     setNewPersonVenmoId,
     setUseNameAsVenmoId,
+    setSaveToFriendsList,
     addPerson,
+    addFromFriend,
     removePerson,
     setPeople,
   };
