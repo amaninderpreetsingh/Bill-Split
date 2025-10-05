@@ -21,6 +21,7 @@ interface Props {
 
 export function VenmoChargeDialog({ charge, open, onOpenChange }: Props) {
   const [venmoId, setVenmoId] = useState('');
+  const [description, setDescription] = useState('');
 
   useEffect(() => {
     if (charge?.recipientId) {
@@ -28,18 +29,22 @@ export function VenmoChargeDialog({ charge, open, onOpenChange }: Props) {
     } else {
       setVenmoId('');
     }
+
+    if (charge?.note) {
+      setDescription(charge.note);
+    } else {
+      setDescription('');
+    }
   }, [charge]);
 
   if (!charge) return null;
 
   const handleOpenVenmo = () => {
-    if (!venmoId.trim()) {
-      return;
-    }
 
     const updatedCharge = {
       ...charge,
       recipientId: venmoId.trim(),
+      note: description.trim() || 'Bill Split',
     };
 
     if (isVenmoInstalled()) {
@@ -87,11 +92,15 @@ export function VenmoChargeDialog({ charge, open, onOpenChange }: Props) {
               </span>
             </div>
 
-            <div className="border-t pt-3">
-              <span className="text-sm text-muted-foreground block mb-1">
-                Description:
-              </span>
-              <span className="text-sm">{charge.note}</span>
+            <div className="border-t pt-3 space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="Enter payment description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="text-sm"
+              />
             </div>
           </div>
 
@@ -106,7 +115,7 @@ export function VenmoChargeDialog({ charge, open, onOpenChange }: Props) {
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleOpenVenmo} disabled={!venmoId.trim()} className="gap-2">
+          <Button onClick={handleOpenVenmo} className="gap-2">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19.384 4.616c.616.952.933 2.064.933 3.432 0 4.284-3.636 9.816-6.612 13.248H6.864L4.8 4.728l6.12-.576 1.176 13.488c1.44-2.304 3.576-6.144 3.576-8.688 0-1.176-.24-2.064-.696-2.832l4.608-1.504z"/>
             </svg>

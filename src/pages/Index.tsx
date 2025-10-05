@@ -134,6 +134,8 @@ const Index = () => {
                 personTotals={bill.personTotals}
                 allItemsAssigned={bill.allItemsAssigned}
                 people={people.people}
+                billData={bill.billData}
+                itemAssignments={bill.itemAssignments}
               />
             </div>
           )}

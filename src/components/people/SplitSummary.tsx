@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PersonTotal, VenmoCharge, Person } from '@/types';
+import { PersonTotal, VenmoCharge, Person, BillData, ItemAssignment } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { VenmoChargeDialog } from '@/components/venmo/VenmoChargeDialog';
@@ -13,16 +13,40 @@ interface Props {
   personTotals: PersonTotal[];
   allItemsAssigned: boolean;
   people: Person[];
+  billData: BillData;
+  itemAssignments: ItemAssignment;
   billName?: string;
 }
 
-export function SplitSummary({ personTotals, allItemsAssigned, people, billName = 'Bill Split' }: Props) {
+export function SplitSummary({ personTotals, allItemsAssigned, people, billData, itemAssignments, billName = 'Bill Split' }: Props) {
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const { toast } = useToast();
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [currentCharge, setCurrentCharge] = useState<VenmoCharge | null>(null);
+  const generateItemDescription = (personId: string): string => {
+    const assignedItems: string[] = [];
+
+    billData.items.forEach(item => {
+      const assignedPeople = itemAssignments[item.id] || [];
+      if (assignedPeople.includes(personId)) {
+        const shareCount = assignedPeople.length;
+        if (shareCount > 1) {
+          assignedItems.push(`${item.name} (split ${shareCount} ways)`);
+        } else {
+          assignedItems.push(item.name);
+        }
+      }
+    });
+
+    if (assignedItems.length === 0) {
+      return `${billName} - Your share`;
+    }
+
+    return `${billName}: ${assignedItems.join(', ')}`;
+  };
+
   const handleChargeOnVenmo = (personTotal: PersonTotal, personVenmoId?: string) => {
     if (!user) {
       toast({
@@ -48,7 +72,7 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billName 
       recipientId: personVenmoId || '',
       recipientName: personTotal.name,
       amount: personTotal.total,
-      note: `${billName} - Your share`,
+      note: generateItemDescription(personTotal.personId),
     };
 
     setCurrentCharge(charge);
