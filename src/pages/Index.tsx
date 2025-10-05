@@ -75,7 +75,11 @@ const Index = () => {
               <PeopleManager
                 people={people.people}
                 newPersonName={people.newPersonName}
+                newPersonVenmoId={people.newPersonVenmoId}
+                useNameAsVenmoId={people.useNameAsVenmoId}
                 onNameChange={people.setNewPersonName}
+                onVenmoIdChange={people.setNewPersonVenmoId}
+                onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
                 onAdd={people.addPerson}
                 onRemove={handleRemovePerson}
               />
@@ -103,13 +107,13 @@ const Index = () => {
                   editingItemId={editor.editingItemId}
                   editingItemName={editor.editingItemName}
                   editingItemPrice={editor.editingItemPrice}
-                  onItemAssignment={bill.handleItemAssignment}
-                  onEditItem={editor.handleEditItem}
-                  onSaveEdit={editor.handleSaveItemEdit}
-                  onCancelEdit={editor.handleCancelItemEdit}
-                  onDeleteItem={editor.handleDeleteItem}
-                  onEditNameChange={editor.setEditingItemName}
-                  onEditPriceChange={editor.setEditingItemPrice}
+                  onAssign={bill.handleItemAssignment}
+                  onEdit={editor.editItem}
+                  onSave={editor.saveEdit}
+                  onCancel={editor.cancelEdit}
+                  onDelete={editor.deleteItem}
+                  setEditingName={editor.setEditingItemName}
+                  setEditingPrice={editor.setEditingItemPrice}
                 />
 
                 {people.people.length === 0 && !isMobile && (
@@ -129,6 +133,7 @@ const Index = () => {
               <SplitSummary
                 personTotals={bill.personTotals}
                 allItemsAssigned={bill.allItemsAssigned}
+                people={people.people}
               />
             </div>
           )}

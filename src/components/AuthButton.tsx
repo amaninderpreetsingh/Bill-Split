@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, LogOut, User } from 'lucide-react';
+import { LogIn, LogOut, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -11,10 +12,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { ProfileSettings } from '@/components/profile/ProfileSettings';
 
 export const AuthButton = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (loading) {
     return null;
@@ -44,8 +48,14 @@ export const AuthButton = () => {
       .slice(0, 2);
   };
 
+  const handleOpenSettings = () => {
+    setDropdownOpen(false);
+    setSettingsOpen(true);
+  };
+
   return (
-    <DropdownMenu>
+    <>
+    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -67,11 +77,18 @@ export const AuthButton = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleOpenSettings} className="cursor-pointer">
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Profile Settings</span>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <ProfileSettings open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </>
   );
 };
