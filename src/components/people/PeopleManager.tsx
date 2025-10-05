@@ -3,8 +3,7 @@ import { Users, UserPlus, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { Person } from '@/types';
 import { AddFromFriendsDialog } from './AddFromFriendsDialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -176,71 +175,48 @@ export function PeopleManager({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center space-x-3">
-            <Switch
-              id="use-name-as-venmo"
-              checked={useNameAsVenmoId}
-              onCheckedChange={(checked) => {
-                onUseNameAsVenmoIdChange(!!checked);
-                if (checked) {
-                  setShowVenmoField(false);
-                }
-              }}
-            />
-            <Label
-              htmlFor="use-name-as-venmo"
-              className="text-sm font-medium cursor-pointer"
-            >
-              Use name as Venmo ID
-            </Label>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant={useNameAsVenmoId ? "default" : "outline"}
+            className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity"
+            onClick={() => {
+              onUseNameAsVenmoIdChange(!useNameAsVenmoId);
+              if (!useNameAsVenmoId) {
+                setShowVenmoField(false);
+              }
+            }}
+          >
+            Use name as Venmo ID
+          </Badge>
 
-          <div className="flex items-center space-x-3">
-            <Switch
-              id="save-to-friends"
-              checked={saveToFriendsList}
-              onCheckedChange={(checked) => onSaveToFriendsListChange(!!checked)}
-            />
-            <Label
-              htmlFor="save-to-friends"
-              className="text-sm font-medium cursor-pointer"
-            >
-              Save to friends
-            </Label>
-          </div>
+          <Badge
+            variant={saveToFriendsList ? "default" : "outline"}
+            className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity"
+            onClick={() => onSaveToFriendsListChange(!saveToFriendsList)}
+          >
+            Save to friends
+          </Badge>
 
           {!useNameAsVenmoId && (
-            <div className="flex items-center space-x-3">
-              <Switch
-                id="add-custom-venmo"
-                checked={showVenmoField}
-                onCheckedChange={(checked) => setShowVenmoField(!!checked)}
-              />
-              <Label
-                htmlFor="add-custom-venmo"
-                className="text-sm font-medium cursor-pointer"
-              >
-                Add custom Venmo ID
-              </Label>
-            </div>
+            <Badge
+              variant={showVenmoField ? "default" : "outline"}
+              className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity"
+              onClick={() => setShowVenmoField(!showVenmoField)}
+            >
+              Add custom Venmo ID
+            </Badge>
           )}
         </div>
 
         {showVenmoField && !useNameAsVenmoId && (
-          <div className="space-y-2">
-            <Label htmlFor="venmoId" className="text-sm text-muted-foreground">
-              Venmo Username
-            </Label>
-            <Input
-              id="venmoId"
-              placeholder="Enter Venmo username (without @)"
-              value={newPersonVenmoId}
-              onChange={(e) => onVenmoIdChange(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
-              className="text-sm"
-            />
-          </div>
+          <Input
+            id="venmoId"
+            placeholder="Enter Venmo username (without @)"
+            value={newPersonVenmoId}
+            onChange={(e) => onVenmoIdChange(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
+            className="text-sm"
+          />
         )}
       </div>
 
