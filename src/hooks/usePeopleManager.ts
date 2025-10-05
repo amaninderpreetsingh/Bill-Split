@@ -57,11 +57,18 @@ export function usePeopleManager() {
         const { db } = await import('@/config/firebase');
 
         const userDocRef = doc(db, 'users', user.uid);
+
+        // Build friend object, only include venmoId if it exists
+        const friendData: { name: string; venmoId?: string } = {
+          name: newPersonName.trim(),
+        };
+
+        if (venmoId) {
+          friendData.venmoId = venmoId;
+        }
+
         await setDoc(userDocRef, {
-          friends: arrayUnion({
-            name: newPersonName.trim(),
-            venmoId: venmoId,
-          })
+          friends: arrayUnion(friendData)
         }, { merge: true });
 
         toast({
