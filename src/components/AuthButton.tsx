@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, LogOut, User, Settings } from 'lucide-react';
+import { LogIn, LogOut, User, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -13,11 +13,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
+import { ManageFriends } from '@/components/profile/ManageFriends';
 
 export const AuthButton = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [friendsOpen, setFriendsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (loading) {
@@ -53,6 +55,11 @@ export const AuthButton = () => {
     setSettingsOpen(true);
   };
 
+  const handleOpenFriends = () => {
+    setDropdownOpen(false);
+    setFriendsOpen(true);
+  };
+
   return (
     <>
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
@@ -81,6 +88,10 @@ export const AuthButton = () => {
           <Settings className="mr-2 h-4 w-4" />
           <span>Profile Settings</span>
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleOpenFriends} className="cursor-pointer">
+          <Users className="mr-2 h-4 w-4" />
+          <span>Manage Friends</span>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign out</span>
@@ -89,6 +100,7 @@ export const AuthButton = () => {
     </DropdownMenu>
 
     <ProfileSettings open={settingsOpen} onOpenChange={setSettingsOpen} />
+    <ManageFriends open={friendsOpen} onOpenChange={setFriendsOpen} />
     </>
   );
 };

@@ -75,9 +75,34 @@ export function useUserProfile() {
     }
   };
 
+  const updateFriends = async (friends: Array<{ name: string; venmoId?: string }>) => {
+    if (!user || !profile) return;
+
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      const updatedProfile = { ...profile, friends };
+
+      await setDoc(docRef, updatedProfile, { merge: true });
+      setProfile(updatedProfile);
+
+      toast({
+        title: 'Friends saved',
+        description: 'Your friends list has been updated successfully.',
+      });
+    } catch (error: any) {
+      console.error('Error updating friends:', error);
+      toast({
+        title: 'Error updating friends',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     profile,
     loading,
     updateVenmoId,
+    updateFriends,
   };
 }

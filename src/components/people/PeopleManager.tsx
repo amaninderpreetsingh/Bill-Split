@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Users, UserPlus, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Person } from '@/types';
 import { AddFromFriendsDialog } from './AddFromFriendsDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 
 interface Friend {
   name: string;
@@ -42,12 +45,79 @@ export function PeopleManager({
   onAddFromFriend,
   onRemove
 }: Props) {
+  const { user } = useAuth();
   const [showVenmoField, setShowVenmoField] = useState(false);
   const [friendsDialogOpen, setFriendsDialogOpen] = useState(false);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredFriends, setFilteredFriends] = useState<Friend[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Load friends list
+  useEffect(() => {
+    if (user) {
+      loadFriends();
+    }
+  }, [user]);
+
+  // Filter friends based on input
+  useEffect(() => {
+    if (newPersonName.trim().length > 0) {
+      const filtered = friends.filter(friend =>
+        friend.name.toLowerCase().startsWith(newPersonName.toLowerCase())
+      );
+      setFilteredFriends(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [newPersonName, friends]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const loadFriends = async () => {
+    if (!user) return;
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setFriends(data.friends || []);
+      }
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    }
+  };
 
   const handleAdd = () => {
     onAdd();
     setShowVenmoField(false);
+    setShowSuggestions(false);
+  };
+
+  const handleSelectFriend = (friend: Friend) => {
+    onAddFromFriend(friend);
+    onNameChange('');
+    onVenmoIdChange('');
+    setShowSuggestions(false);
   };
 
   return (
@@ -59,13 +129,37 @@ export function PeopleManager({
 
       <div className="space-y-3 mb-4">
         <div className="flex flex-col sm:flex-row gap-2">
-          <Input
-            placeholder="Enter person's name"
-            value={newPersonName}
-            onChange={(e) => onNameChange(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !showVenmoField && handleAdd()}
-            className="flex-1"
-          />
+          <div className="flex-1 relative">
+            <Input
+              ref={inputRef}
+              placeholder="Enter person's name"
+              value={newPersonName}
+              onChange={(e) => onNameChange(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && !showVenmoField && handleAdd()}
+              className="w-full"
+            />
+            {showSuggestions && filteredFriends.length > 0 && (
+              <div
+                ref={suggestionsRef}
+                className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-[200px] overflow-y-auto"
+              >
+                {filteredFriends.map((friend, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSelectFriend(friend)}
+                    className="px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <div className="font-medium">{friend.name}</div>
+                    {friend.venmoId && (
+                      <div className="text-xs text-muted-foreground">
+                        @{friend.venmoId}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button onClick={handleAdd} className="flex-1 sm:flex-none">
               <UserPlus className="w-4 h-4 mr-2" />
