@@ -1,5 +1,6 @@
 import { Receipt } from 'lucide-react';
 import { AuthButton } from '@/components/AuthButton';
+import { NavigationBar } from './NavigationBar';
 
 export function Header() {
   return (
@@ -12,7 +13,10 @@ export function Header() {
             </div>
             <h1 className="text-2xl font-bold">SplitBill</h1>
           </div>
-          <AuthButton />
+          <div className="flex items-center gap-6">
+            <NavigationBar />
+            <AuthButton />
+          </div>
         </div>
       </div>
     </header>
