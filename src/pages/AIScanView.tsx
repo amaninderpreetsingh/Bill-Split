@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { HeroSection } from '@/components/layout/HeroSection';
 import { ReceiptUploader } from '@/components/receipt/ReceiptUploader';
 import { PeopleManager } from '@/components/people/PeopleManager';
@@ -12,15 +13,17 @@ import { useReceiptAnalyzer } from '@/hooks/useReceiptAnalyzer';
 import { useItemEditor } from '@/hooks/useItemEditor';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
-import { Receipt, Users } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Receipt, Users, Upload, Edit } from 'lucide-react';
 
 export default function AIScanView() {
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState('ai-scan');
 
   const people = usePeopleManager();
   const bill = useBillSplitter(people.people);
   const upload = useFileUpload();
-  const analyzer = useReceiptAnalyzer(bill.setBillData, people.setPeople);
+  const analyzer = useReceiptAnalyzer(bill.setBillData, people.setPeople, bill.billData);
   const editor = useItemEditor(
     bill.billData,
     bill.setBillData,
@@ -35,7 +38,9 @@ export default function AIScanView() {
 
   const handleStartOver = () => {
     bill.reset();
-    upload.handleRemoveImage();
+    if (activeTab === 'ai-scan') {
+      upload.handleRemoveImage();
+    }
   };
 
   const handleAnalyzeReceipt = async () => {
@@ -51,6 +56,30 @@ export default function AIScanView() {
         onStartOver={handleStartOver}
       />
 
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="ai-scan" className="gap-2">
+            <Upload className="w-4 h-4" />
+            AI Scan
+          </TabsTrigger>
+          <TabsTrigger value="manual" className="gap-2">
+            <Edit className="w-4 h-4" />
+            Manual Entry
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ai-scan" className="space-y-6">
+          {bill.billData && (
+            <div className="flex justify-end">
+              <button
+                onClick={handleStartOver}
+                className="text-sm text-muted-foreground hover:text-foreground underline"
+              >
+                Start Over
+              </button>
+            </div>
+          )}
+
           <ReceiptUploader
             selectedFile={upload.selectedFile}
             imagePreview={upload.imagePreview}
@@ -64,9 +93,10 @@ export default function AIScanView() {
             onAnalyze={handleAnalyzeReceipt}
             fileInputRef={upload.fileInputRef}
           />
-        {bill.billData && (
-          <div className="mt-12 space-y-6">
-            <PeopleManager
+
+          {bill.billData && (
+            <div className="space-y-6">
+              <PeopleManager
                 people={people.people}
                 newPersonName={people.newPersonName}
                 newPersonVenmoId={people.newPersonVenmoId}
@@ -127,62 +157,157 @@ export default function AIScanView() {
                   </p>
                 )}
 
-                {bill.billData && (
-                  <BillSummary
-                    billData={bill.billData}
-                    customTip={bill.customTip}
-                    effectiveTip={bill.effectiveTip}
-                    onTipChange={bill.setCustomTip}
-                  />
-                )}
-              </Card>
-
-              {bill.billData && (
-                <SplitSummary
-                  personTotals={bill.personTotals}
-                  allItemsAssigned={bill.allItemsAssigned}
-                  people={people.people}
+                <BillSummary
                   billData={bill.billData}
-                  itemAssignments={bill.itemAssignments}
+                  customTip={bill.customTip}
+                  effectiveTip={bill.effectiveTip}
+                  onTipChange={bill.setCustomTip}
                 />
-              )}
-            </div>)}
-
-          {!bill.billData && (
-            <div className="grid md:grid-cols-3 gap-6 mt-12">
-              <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
-                  <Receipt className="w-6 h-6 text-primary" />
-                </div>
-                <h4 className="font-semibold">AI-Powered</h4>
-                <p className="text-sm text-muted-foreground">
-                  Gemini AI extracts items, tax, and tip automatically
-                </p>
               </Card>
 
-              <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mx-auto">
-                  <Users className="w-6 h-6 text-accent" />
-                </div>
-                <h4 className="font-semibold">Fair Splitting</h4>
-                <p className="text-sm text-muted-foreground">
-                  Assign items to people with proportional tax & tip
-                </p>
-              </Card>
-
-              <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-primary-glow/10 flex items-center justify-center mx-auto">
-                  <svg className="w-6 h-6 text-primary-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h4 className="font-semibold">Instant Results</h4>
-                <p className="text-sm text-muted-foreground">
-                  See who owes what in seconds, no manual math needed
-                </p>
-              </Card>
+              <SplitSummary
+                personTotals={bill.personTotals}
+                allItemsAssigned={bill.allItemsAssigned}
+                people={people.people}
+                billData={bill.billData}
+                itemAssignments={bill.itemAssignments}
+              />
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="manual" className="space-y-6">
+          {bill.billData && (
+            <div className="flex justify-end">
+              <button
+                onClick={handleStartOver}
+                className="text-sm text-muted-foreground hover:text-foreground underline"
+              >
+                Start Over
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            <PeopleManager
+              people={people.people}
+              newPersonName={people.newPersonName}
+              newPersonVenmoId={people.newPersonVenmoId}
+              useNameAsVenmoId={people.useNameAsVenmoId}
+              saveToFriendsList={people.saveToFriendsList}
+              onNameChange={people.setNewPersonName}
+              onVenmoIdChange={people.setNewPersonVenmoId}
+              onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
+              onSaveToFriendsListChange={people.setSaveToFriendsList}
+              onAdd={people.addPerson}
+              onAddFromFriend={people.addFromFriend}
+              onRemove={handleRemovePerson}
+            />
+
+            <Card className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-primary" />
+                  <h3 className="text-xl font-semibold">Bill Items</h3>
+                </div>
+
+                {people.people.length > 0 && !isMobile && (
+                  <AssignmentModeToggle
+                    mode={bill.assignmentMode}
+                    onModeChange={bill.setAssignmentMode}
+                  />
+                )}
+              </div>
+
+              <BillItems
+                billData={bill.billData}
+                people={people.people}
+                itemAssignments={bill.itemAssignments}
+                assignmentMode={bill.assignmentMode}
+                editingItemId={editor.editingItemId}
+                editingItemName={editor.editingItemName}
+                editingItemPrice={editor.editingItemPrice}
+                onAssign={bill.handleItemAssignment}
+                onEdit={editor.editItem}
+                onSave={editor.saveEdit}
+                onCancel={editor.cancelEdit}
+                onDelete={editor.deleteItem}
+                setEditingName={editor.setEditingItemName}
+                setEditingPrice={editor.setEditingItemPrice}
+                isAdding={editor.isAdding}
+                newItemName={editor.newItemName}
+                newItemPrice={editor.newItemPrice}
+                setNewItemName={editor.setNewItemName}
+                setNewItemPrice={editor.setNewItemPrice}
+                onStartAdding={editor.startAdding}
+                onAddItem={editor.addItem}
+                onCancelAdding={editor.cancelAdding}
+              />
+
+              {people.people.length === 0 && !isMobile && bill.billData && (
+                <p className="text-sm text-muted-foreground text-center py-4 mt-4">
+                  Add people above to assign items
+                </p>
+              )}
+
+              {bill.billData && (
+                <BillSummary
+                  billData={bill.billData}
+                  customTip={bill.customTip}
+                  effectiveTip={bill.effectiveTip}
+                  onTipChange={bill.setCustomTip}
+                />
+              )}
+            </Card>
+
+            {bill.billData && (
+              <SplitSummary
+                personTotals={bill.personTotals}
+                allItemsAssigned={bill.allItemsAssigned}
+                people={people.people}
+                billData={bill.billData}
+                itemAssignments={bill.itemAssignments}
+              />
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {!bill.billData && (
+        <div className="grid md:grid-cols-3 gap-6 mt-12">
+          <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
+              <Receipt className="w-6 h-6 text-primary" />
+            </div>
+            <h4 className="font-semibold">AI-Powered</h4>
+            <p className="text-sm text-muted-foreground">
+              Gemini AI extracts items, tax, and tip automatically
+            </p>
+          </Card>
+
+          <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
+            <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mx-auto">
+              <Users className="w-6 h-6 text-accent" />
+            </div>
+            <h4 className="font-semibold">Fair Splitting</h4>
+            <p className="text-sm text-muted-foreground">
+              Assign items to people with proportional tax & tip
+            </p>
+          </Card>
+
+          <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
+            <div className="w-12 h-12 rounded-lg bg-primary-glow/10 flex items-center justify-center mx-auto">
+              <svg className="w-6 h-6 text-primary-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h4 className="font-semibold">Instant Results</h4>
+            <p className="text-sm text-muted-foreground">
+              See who owes what in seconds, no manual math needed
+            </p>
+          </Card>
+        </div>
+      )}
     </>
   );
 }

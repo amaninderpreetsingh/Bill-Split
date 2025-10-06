@@ -32,7 +32,7 @@ export default function GroupDetailView() {
   const people = usePeopleManager();
   const bill = useBillSplitter(people.people);
   const upload = useFileUpload();
-  const analyzer = useReceiptAnalyzer(bill.setBillData, people.setPeople);
+  const analyzer = useReceiptAnalyzer(bill.setBillData, people.setPeople, bill.billData);
   const editor = useItemEditor(
     bill.billData,
     bill.setBillData,
