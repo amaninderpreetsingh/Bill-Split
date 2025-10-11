@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
 import AIScanView from "./pages/AIScanView";
-import ManualEntryView from "./pages/ManualEntryView";
 import GroupEventView from "./pages/GroupEventView";
 import GroupDetailView from "./pages/GroupDetailView";
 import Auth from "./pages/Auth";
@@ -24,7 +23,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<AIScanView />} />
-              <Route path="manual" element={<ManualEntryView />} />
               <Route path="groups" element={<GroupEventView />} />
               <Route path="groups/:groupId" element={<GroupDetailView />} />
             </Route>

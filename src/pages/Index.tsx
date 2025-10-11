@@ -67,10 +67,6 @@ const Index = () => {
                 <Upload className="w-4 h-4" />
                 AI Scan
               </TabsTrigger>
-              <TabsTrigger value="manual" className="gap-2">
-                <Edit className="w-4 h-4" />
-                Manual Entry
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="ai-scan" className="space-y-6">
