@@ -173,6 +173,7 @@ export default function GroupDetailView() {
                 onAdd={people.addPerson}
                 onAddFromFriend={people.addFromFriend}
                 onRemove={handleRemovePerson}
+          setPeople={people.setPeople}
               />
 
               <Card className="p-4 md:p-6">
@@ -266,6 +267,7 @@ export default function GroupDetailView() {
               onAdd={people.addPerson}
               onAddFromFriend={people.addFromFriend}
               onRemove={handleRemovePerson}
+          setPeople={people.setPeople}
             />
 
             <Card className="p-4 md:p-6">

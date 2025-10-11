@@ -6,9 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Person } from '@/types';
 import { AddFromFriendsDialog } from './AddFromFriendsDialog';
+import { AddFromSquadDialog } from '@/components/squads/AddFromSquadDialog';
+import { SaveAsSquadButton } from '@/components/squads/SaveAsSquadButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import { convertSquadMembersToPeople } from '@/utils/squadUtils';
+import { SquadMember } from '@/types/squad.types';
 
 interface Friend {
   name: string;
@@ -28,6 +32,7 @@ interface Props {
   onAdd: () => void;
   onAddFromFriend: (friend: Friend) => void;
   onRemove: (personId: string) => void;
+  setPeople: React.Dispatch<React.SetStateAction<Person[]>>;
 }
 
 export function PeopleManager({
@@ -42,11 +47,13 @@ export function PeopleManager({
   onSaveToFriendsListChange,
   onAdd,
   onAddFromFriend,
-  onRemove
+  onRemove,
+  setPeople
 }: Props) {
   const { user } = useAuth();
   const [showVenmoField, setShowVenmoField] = useState(false);
   const [friendsDialogOpen, setFriendsDialogOpen] = useState(false);
+  const [squadDialogOpen, setSquadDialogOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredFriends, setFilteredFriends] = useState<Friend[]>([]);
@@ -119,6 +126,13 @@ export function PeopleManager({
     setShowSuggestions(false);
   };
 
+  const handleAddSquad = (members: SquadMember[]) => {
+    const newPeople = convertSquadMembersToPeople(members);
+
+    // Always append to existing people list
+    setPeople([...people, ...newPeople]);
+  };
+
   return (
     <Card className="p-4 md:p-6">
       <div className="flex items-center gap-2 mb-4">
@@ -159,7 +173,7 @@ export function PeopleManager({
               </div>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={handleAdd} className="flex-1 sm:flex-none">
               <UserPlus className="w-4 h-4 mr-2" />
               Add
@@ -170,7 +184,15 @@ export function PeopleManager({
               className="flex-1 sm:flex-none"
             >
               <UserCheck className="w-4 h-4 mr-2" />
-              Add from friends
+              Friends
+            </Button>
+            <Button
+              onClick={() => setSquadDialogOpen(true)}
+              variant="outline"
+              className="flex-1 sm:flex-none"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Squad
             </Button>
           </div>
         </div>
@@ -221,30 +243,35 @@ export function PeopleManager({
       </div>
 
       {people.length > 0 && (
-        <div className="space-y-2">
-          {people.map((person) => (
-            <div
-              key={person.id}
-              className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
-            >
-              <div className="flex-1">
-                <span className="font-medium">{person.name}</span>
-                {person.venmoId && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    (@{person.venmoId})
-                  </span>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemove(person.id)}
+        <>
+          <div className="flex justify-end mb-2">
+            <SaveAsSquadButton people={people} />
+          </div>
+          <div className="space-y-2">
+            {people.map((person) => (
+              <div
+                key={person.id}
+                className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
               >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
-        </div>
+                <div className="flex-1">
+                  <span className="font-medium">{person.name}</span>
+                  {person.venmoId && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      (@{person.venmoId})
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemove(person.id)}
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {people.length === 0 && (
@@ -257,6 +284,12 @@ export function PeopleManager({
         open={friendsDialogOpen}
         onOpenChange={setFriendsDialogOpen}
         onAddPerson={onAddFromFriend}
+      />
+
+      <AddFromSquadDialog
+        open={squadDialogOpen}
+        onOpenChange={setSquadDialogOpen}
+        onAddSquad={handleAddSquad}
       />
     </Card>
   );
