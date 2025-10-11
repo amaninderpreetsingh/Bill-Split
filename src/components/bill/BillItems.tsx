@@ -26,6 +26,8 @@ interface Props {
   onStartAdding: () => void;
   onAddItem: () => void;
   onCancelAdding: () => void;
+  splitEvenly: boolean;
+  onToggleSplitEvenly: () => void;
 }
 
 export function BillItems(props: Props) {
@@ -56,6 +58,8 @@ export function BillItems(props: Props) {
           onStartAdding={props.onStartAdding}
           onAddItem={props.onAddItem}
           onCancelAdding={props.onCancelAdding}
+          splitEvenly={props.splitEvenly}
+          onToggleSplitEvenly={props.onToggleSplitEvenly}
         />
       </div>
     );

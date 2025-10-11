@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Check, X, Plus } from 'lucide-react';
+import { Pencil, Trash2, Check, X, Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -29,6 +29,8 @@ interface Props {
   onStartAdding: () => void;
   onAddItem: () => void;
   onCancelAdding: () => void;
+  splitEvenly: boolean;
+  onToggleSplitEvenly: () => void;
 }
 
 export function BillItemsTable({
@@ -54,17 +56,29 @@ export function BillItemsTable({
   onStartAdding,
   onAddItem,
   onCancelAdding,
+  splitEvenly,
+  onToggleSplitEvenly,
 }: Props) {
   const items = billData?.items || [];
 
   return (
     <>
       {!isAdding && (
-        <div className="mb-4">
+        <div className="mb-4 flex gap-2">
           <Button onClick={onStartAdding} className="gap-2">
             <Plus className="w-4 h-4" />
             Add Item
           </Button>
+          {people.length > 0 && (
+            <Button
+              onClick={onToggleSplitEvenly}
+              variant={splitEvenly ? "default" : "outline"}
+              className="gap-2"
+            >
+              <Users className="w-4 h-4" />
+              Split Evenly
+            </Button>
+          )}
         </div>
       )}
 

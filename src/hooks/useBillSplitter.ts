@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { BillData, ItemAssignment, AssignmentMode, PersonTotal, Person } from '@/types';
 import { calculatePersonTotals, areAllItemsAssigned } from '@/utils/calculations';
 import { useToast } from './use-toast';
@@ -8,6 +8,7 @@ export function useBillSplitter(people: Person[]) {
   const [itemAssignments, setItemAssignments] = useState<ItemAssignment>({});
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>('checkboxes');
   const [customTip, setCustomTip] = useState('');
+  const [splitEvenly, setSplitEvenly] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -58,10 +59,46 @@ export function useBillSplitter(people: Person[]) {
     setItemAssignments(newAssignments);
   };
 
+  const assignEveryoneToAllItems = () => {
+    if (!billData || people.length === 0) return;
+
+    const newAssignments: ItemAssignment = {};
+    billData.items.forEach(item => {
+      newAssignments[item.id] = people.map(person => person.id);
+    });
+    setItemAssignments(newAssignments);
+  };
+
+  const toggleSplitEvenly = () => {
+    const newSplitEvenly = !splitEvenly;
+    setSplitEvenly(newSplitEvenly);
+
+    if (newSplitEvenly) {
+      assignEveryoneToAllItems();
+      toast({
+        title: 'Split evenly enabled',
+        description: 'All items will be split equally among all people.',
+      });
+    } else {
+      toast({
+        title: 'Split evenly disabled',
+        description: 'You can now manually assign items to people.',
+      });
+    }
+  };
+
+  // When split evenly is enabled, automatically assign new items or people
+  useEffect(() => {
+    if (splitEvenly && billData && people.length > 0) {
+      assignEveryoneToAllItems();
+    }
+  }, [splitEvenly, billData?.items.length, people.length]);
+
   const reset = () => {
     setBillData(null);
     setItemAssignments({});
     setCustomTip('');
+    setSplitEvenly(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -85,6 +122,8 @@ export function useBillSplitter(people: Person[]) {
     handleItemAssignment,
     removePersonFromAssignments,
     removeItemAssignments,
+    splitEvenly,
+    toggleSplitEvenly,
     reset,
     fileInputRef,
   };

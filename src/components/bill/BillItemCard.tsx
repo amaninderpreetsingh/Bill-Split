@@ -1,4 +1,4 @@
-import { Check, Pencil, Trash2, X, Plus } from 'lucide-react';
+import { Check, Pencil, Trash2, X, Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,8 @@ interface Props {
   onStartAdding: () => void;
   onAddItem: () => void;
   onCancelAdding: () => void;
+  splitEvenly: boolean;
+  onToggleSplitEvenly: () => void;
 }
 
 export function BillItemCard({
@@ -51,16 +53,30 @@ export function BillItemCard({
   onStartAdding,
   onAddItem,
   onCancelAdding,
+  splitEvenly,
+  onToggleSplitEvenly,
 }: Props) {
   const items = billData?.items || [];
 
   return (
     <>
       {!isAdding && (
-        <Button onClick={onStartAdding} className="w-full mb-3 gap-2">
-          <Plus className="w-4 h-4" />
-          Add Item
-        </Button>
+        <div className="mb-3 flex flex-col gap-2">
+          <Button onClick={onStartAdding} className="w-full gap-2">
+            <Plus className="w-4 h-4" />
+            Add Item
+          </Button>
+          {people.length > 0 && (
+            <Button
+              onClick={onToggleSplitEvenly}
+              variant={splitEvenly ? "default" : "outline"}
+              className="w-full gap-2"
+            >
+              <Users className="w-4 h-4" />
+              Split Evenly
+            </Button>
+          )}
+        </div>
       )}
 
       {isAdding && (

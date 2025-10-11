@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, UserPlus, Search } from 'lucide-react';
 import {
   Dialog,
@@ -19,9 +19,16 @@ interface AddFromSquadDialogProps {
 }
 
 export function AddFromSquadDialog({ open, onOpenChange, onAddSquad }: AddFromSquadDialogProps) {
-  const { squads, loading } = useSquadManager();
+  const { squads, loading, loadSquads } = useSquadManager();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
+
+  // Refresh squads when dialog opens
+  useEffect(() => {
+    if (open) {
+      loadSquads();
+    }
+  }, [open, loadSquads]);
 
   const filteredSquads = squads.filter((squad) =>
     squad.name.toLowerCase().includes(searchQuery.toLowerCase())

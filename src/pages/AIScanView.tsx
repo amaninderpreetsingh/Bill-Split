@@ -150,6 +150,8 @@ export default function AIScanView() {
                   onStartAdding={editor.startAdding}
                   onAddItem={editor.addItem}
                   onCancelAdding={editor.cancelAdding}
+                  splitEvenly={bill.splitEvenly}
+                  onToggleSplitEvenly={bill.toggleSplitEvenly}
                 />
 
                 {people.people.length === 0 && !isMobile && bill.billData && (
@@ -244,6 +246,8 @@ export default function AIScanView() {
                 onStartAdding={editor.startAdding}
                 onAddItem={editor.addItem}
                 onCancelAdding={editor.cancelAdding}
+                splitEvenly={bill.splitEvenly}
+                onToggleSplitEvenly={bill.toggleSplitEvenly}
               />
 
               {people.people.length === 0 && !isMobile && bill.billData && (

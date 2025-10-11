@@ -155,6 +155,8 @@ const Index = () => {
                       onStartAdding={editor.startAdding}
                       onAddItem={editor.addItem}
                       onCancelAdding={editor.cancelAdding}
+                      splitEvenly={bill.splitEvenly}
+                      onToggleSplitEvenly={bill.toggleSplitEvenly}
                     />
 
                     {people.people.length === 0 && !isMobile && bill.billData && (
@@ -249,6 +251,8 @@ const Index = () => {
                     onStartAdding={editor.startAdding}
                     onAddItem={editor.addItem}
                     onCancelAdding={editor.cancelAdding}
+                    splitEvenly={bill.splitEvenly}
+                    onToggleSplitEvenly={bill.toggleSplitEvenly}
                   />
 
                   {people.people.length === 0 && !isMobile && bill.billData && (
