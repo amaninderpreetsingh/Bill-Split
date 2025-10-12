@@ -8,7 +8,8 @@
       "Bash(npm install:*)",
       "Bash(npx expo start:*)",
       "Bash(npm uninstall:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(npm run build:dev:*)"
     ],
     "deny": [],
     "ask": []

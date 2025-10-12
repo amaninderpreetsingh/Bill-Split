@@ -95,19 +95,19 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billData,
 
   return (
     <>
-      <Card className="p-4 md:p-6">
+      <Card className="p-3 md:p-6">
         <div className="flex items-center gap-2 mb-4">
-          <DollarSign className="w-5 h-5 text-primary" />
-          <h3 className="text-xl font-semibold">Split Summary</h3>
+          <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+          <h3 className="text-lg md:text-xl font-semibold">Split Summary</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {personTotals.map((pt) => (
             <div
               key={pt.personId}
-              className="p-4 bg-secondary/30 rounded-lg border border-primary/10"
+              className="p-3 md:p-4 bg-secondary/30 rounded-lg border border-primary/10"
             >
-              <div className="font-semibold text-lg mb-3">{pt.name}</div>
+              <div className="font-semibold text-base md:text-lg mb-2 md:mb-3">{pt.name}</div>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Items:</span>

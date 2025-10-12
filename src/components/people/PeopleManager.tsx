@@ -134,10 +134,10 @@ export function PeopleManager({
   };
 
   return (
-    <Card className="p-4 md:p-6">
+    <Card className="p-3 md:p-6">
       <div className="flex items-center gap-2 mb-4">
-        <Users className="w-5 h-5 text-primary" />
-        <h3 className="text-xl font-semibold">People</h3>
+        <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+        <h3 className="text-lg md:text-xl font-semibold">People</h3>
       </div>
 
       <div className="space-y-3 mb-4">
@@ -251,10 +251,10 @@ export function PeopleManager({
             {people.map((person) => (
               <div
                 key={person.id}
-                className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                className="flex items-center justify-between p-2 md:p-3 bg-secondary/50 rounded-lg"
               >
                 <div className="flex-1">
-                  <span className="font-medium">{person.name}</span>
+                  <span className="text-sm md:text-base font-medium">{person.name}</span>
                   {person.venmoId && (
                     <span className="ml-2 text-xs text-muted-foreground">
                       (@{person.venmoId})

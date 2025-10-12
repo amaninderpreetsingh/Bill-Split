@@ -8,15 +8,18 @@ interface InputProps extends TextInputProps {
 }
 
 export function Input({ label, error, style, ...props }: InputProps) {
+  
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label ? (
+        <Text style={styles.label}>{label?.trim()}</Text>
+      ) : null}
       <TextInput
         style={[styles.input, error && styles.inputError, style]}
         placeholderTextColor={colors.gray400}
         {...props}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error ? (<Text style={styles.errorText}>{error?.trim()}</Text>) : null}
     </View>
   );
 }

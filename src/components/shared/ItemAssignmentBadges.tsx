@@ -13,14 +13,14 @@ interface Props {
 export function ItemAssignmentBadges({ item, people, itemAssignments, onAssign, showSplit = false }: Props) {
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 md:gap-2">
         {people.map((person) => {
           const isAssigned = (itemAssignments[item.id] || []).includes(person.id);
           return (
             <Badge
               key={person.id}
               variant={isAssigned ? 'default' : 'outline'}
-              className={`cursor-pointer px-3 py-1.5 text-sm transition-all hover:scale-105 ${
+              className={`cursor-pointer px-2 py-1 md:px-3 md:py-1.5 text-xs md:text-sm transition-all hover:scale-105 ${
                 isAssigned
                   ? 'bg-primary text-primary-foreground shadow-md'
                   : 'hover:bg-secondary hover:border-primary/50'

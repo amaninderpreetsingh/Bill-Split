@@ -9,11 +9,11 @@ interface Props {
 
 export function HeroSection({ hasBillData, onLoadMock, onStartOver }: Props) {
   return (
-    <div className="text-center mb-12 space-y-4">
-      <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
+    <div className="text-center mb-8 md:mb-12 space-y-3 md:space-y-4">
+      <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
         Split Your Bill Instantly
       </h2>
-      <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+      <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
         Upload a photo of your receipt and let AI do the math. Fair splitting with tax and tip included.
       </p>
       <div className="flex gap-2 justify-center mt-2">

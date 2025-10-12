@@ -51,9 +51,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
-      <Header />
-
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-6 md:py-12">
         <div className="max-w-4xl mx-auto">
           <HeroSection
             hasBillData={!!bill.billData}
@@ -61,7 +59,7 @@ const Index = () => {
             onStartOver={handleStartOver}
           />
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="ai-scan" className="gap-2">
                 <Upload className="w-4 h-4" />
@@ -69,7 +67,7 @@ const Index = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="ai-scan" className="space-y-6">
+            <TabsContent value="ai-scan" className="space-y-4 md:space-y-6">
               {bill.billData && (
                 <div className="flex justify-end">
                   <button
@@ -96,7 +94,7 @@ const Index = () => {
               />
 
               {bill.billData && (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   <PeopleManager
                     people={people.people}
                     newPersonName={people.newPersonName}
@@ -113,11 +111,11 @@ const Index = () => {
           setPeople={people.setPeople}
                   />
 
-                  <Card className="p-4 md:p-6">
+                  <Card className="p-3 md:p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                       <div className="flex items-center gap-2">
-                        <Receipt className="w-5 h-5 text-primary" />
-                        <h3 className="text-xl font-semibold">Bill Items</h3>
+                        <Receipt className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                        <h3 className="text-lg md:text-xl font-semibold">Bill Items</h3>
                       </div>
 
                       {people.people.length > 0 && !isMobile && (
@@ -180,7 +178,7 @@ const Index = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="manual" className="space-y-6">
+            <TabsContent value="manual" className="space-y-4 md:space-y-6">
               {bill.billData && (
                 <div className="flex justify-end">
                   <button
@@ -192,7 +190,7 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 <PeopleManager
                   people={people.people}
                   newPersonName={people.newPersonName}
@@ -209,11 +207,11 @@ const Index = () => {
           setPeople={people.setPeople}
                 />
 
-                <Card className="p-4 md:p-6">
+                <Card className="p-3 md:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <div className="flex items-center gap-2">
-                      <Receipt className="w-5 h-5 text-primary" />
-                      <h3 className="text-xl font-semibold">Bill Items</h3>
+                      <Receipt className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                      <h3 className="text-lg md:text-xl font-semibold">Bill Items</h3>
                     </div>
 
                     {people.people.length > 0 && !isMobile && (
@@ -281,35 +279,35 @@ const Index = () => {
           </Tabs>
 
           {!bill.billData && (
-            <div className="grid md:grid-cols-3 gap-6 mt-12">
-              <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
-                  <Receipt className="w-6 h-6 text-primary" />
+            <div className="grid md:grid-cols-3 gap-4 md:gap-6 mt-8 md:mt-12">
+              <Card className="p-4 md:p-6 text-center space-y-2 md:space-y-3 hover:shadow-medium transition-all duration-300">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
+                  <Receipt className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                 </div>
-                <h4 className="font-semibold">AI-Powered</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="text-sm md:text-base font-semibold">AI-Powered</h4>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Gemini AI extracts items, tax, and tip automatically
                 </p>
               </Card>
 
-              <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mx-auto">
-                  <Users className="w-6 h-6 text-accent" />
+              <Card className="p-4 md:p-6 text-center space-y-2 md:space-y-3 hover:shadow-medium transition-all duration-300">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-accent/10 flex items-center justify-center mx-auto">
+                  <Users className="w-5 h-5 md:w-6 md:h-6 text-accent" />
                 </div>
-                <h4 className="font-semibold">Fair Splitting</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="text-sm md:text-base font-semibold">Fair Splitting</h4>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Assign items to people with proportional tax & tip
                 </p>
               </Card>
 
-              <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-primary-glow/10 flex items-center justify-center mx-auto">
-                  <svg className="w-6 h-6 text-primary-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <Card className="p-4 md:p-6 text-center space-y-2 md:space-y-3 hover:shadow-medium transition-all duration-300">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary-glow/10 flex items-center justify-center mx-auto">
+                  <svg className="w-5 h-5 md:w-6 md:h-6 text-primary-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h4 className="font-semibold">Instant Results</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="text-sm md:text-base font-semibold">Instant Results</h4>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   See who owes what in seconds, no manual math needed
                 </p>
               </Card>

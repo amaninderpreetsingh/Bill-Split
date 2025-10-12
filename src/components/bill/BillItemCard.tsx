@@ -80,7 +80,7 @@ export function BillItemCard({
       )}
 
       {isAdding && (
-        <Card className="p-4 space-y-3 border-2 border-primary mb-3">
+        <Card className="p-3 md:p-4 space-y-2 md:space-y-3 border-2 border-primary mb-3">
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-1 block">Item Name</label>
             <Input
@@ -88,7 +88,7 @@ export function BillItemCard({
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && newItemPrice && onAddItem()}
-              className="text-base"
+              className="text-sm md:text-base"
               autoFocus
             />
           </div>
@@ -102,7 +102,7 @@ export function BillItemCard({
                 value={newItemPrice}
                 onChange={(e) => setNewItemPrice(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && newItemName && onAddItem()}
-                className="text-base text-right pl-8"
+                className="text-sm md:text-base text-right pl-8"
                 step="0.01"
                 min="0"
               />
@@ -136,20 +136,20 @@ export function BillItemCard({
         return (
           <Card
             key={item.id}
-      className={`p-4 space-y-3 border-2 transition-all duration-300 ${
+      className={`p-3 md:p-4 space-y-2 md:space-y-3 border-2 transition-all duration-300 ${
         hasAssignments
           ? 'border-primary shadow-lg shadow-primary/20 bg-primary/5'
           : 'border-border'
       }`}
     >
       {isEditing ? (
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-1 block">Item Name</label>
             <Input
               value={editingName}
               onChange={(e) => setEditingName(e.target.value)}
-              className="text-base"
+              className="text-sm md:text-base"
             />
           </div>
           <div>
@@ -160,7 +160,7 @@ export function BillItemCard({
                 type="number"
                 value={editingPrice}
                 onChange={(e) => setEditingPrice(e.target.value)}
-                className="text-base text-right pl-8"
+                className="text-sm md:text-base text-right pl-8"
                 step="0.01"
                 min="0"
               />
@@ -181,15 +181,15 @@ export function BillItemCard({
         <>
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h4 className="font-semibold text-base">{item.name}</h4>
-              <p className="text-xl font-bold text-primary mt-1">${item.price.toFixed(2)}</p>
+              <h4 className="font-semibold text-sm md:text-base">{item.name}</h4>
+              <p className="text-lg md:text-xl font-bold text-primary mt-1">${item.price.toFixed(2)}</p>
             </div>
             <div className="flex gap-1">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => onEdit(item.id, item.name, item.price)}
-                className="h-9 w-9 p-0"
+                className="h-8 w-8 md:h-9 md:w-9 p-0"
               >
                 <Pencil className="w-4 h-4" />
               </Button>
@@ -197,7 +197,7 @@ export function BillItemCard({
                 size="sm"
                 variant="outline"
                 onClick={() => onDelete(item.id)}
-                className="h-9 w-9 p-0 text-destructive hover:text-destructive"
+                className="h-8 w-8 md:h-9 md:w-9 p-0 text-destructive hover:text-destructive"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>

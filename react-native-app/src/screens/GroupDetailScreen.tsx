@@ -196,7 +196,10 @@ export default function GroupDetailScreen() {
   };
 
   const handleAssignmentToggle = (itemId: string, personId: string) => {
+    console.log('handleAssignmentToggle', itemId, personId)
+    console.log('itemAssignments', itemAssignments)
     const currentAssignments = itemAssignments[itemId] || [];
+    console.log('currentAssignments', currentAssignments)
     const isAssigned = currentAssignments.includes(personId);
     handleItemAssignment(itemId, personId, !isAssigned);
   };

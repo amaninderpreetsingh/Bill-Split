@@ -8,6 +8,7 @@ import { Layout } from "@/components/layout/Layout";
 import AIScanView from "./pages/AIScanView";
 import GroupEventView from "./pages/GroupEventView";
 import GroupDetailView from "./pages/GroupDetailView";
+import SettingsView from "./pages/SettingsView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const App = () => (
               <Route index element={<AIScanView />} />
               <Route path="groups" element={<GroupEventView />} />
               <Route path="groups/:groupId" element={<GroupDetailView />} />
+              <Route path="settings" element={<SettingsView />} />
             </Route>
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

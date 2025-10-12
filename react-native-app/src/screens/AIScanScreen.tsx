@@ -268,9 +268,17 @@ export default function AIScanScreen() {
           />
         )}
 
-        {/* Tax & Tip Form */}
+        
+        {/* People Manager */}
         {billData && !editingItemId && !isAdding && (
-          <TaxTipForm billData={billData} onUpdate={updateTaxAndTip} />
+          <PeopleManager
+            people={people}
+            personTotals={personTotals}
+            friends={friends}
+            onAddPerson={handleAddPerson}
+            onRemovePerson={removePerson}
+            onChargeVenmo={handleChargeVenmo}
+          />
         )}
 
         {/* Bill Items List */}
@@ -286,17 +294,12 @@ export default function AIScanScreen() {
           />
         )}
 
-        {/* People Manager */}
+        {/* Tax & Tip Form */}
         {billData && !editingItemId && !isAdding && (
-          <PeopleManager
-            people={people}
-            personTotals={personTotals}
-            friends={friends}
-            onAddPerson={handleAddPerson}
-            onRemovePerson={removePerson}
-            onChargeVenmo={handleChargeVenmo}
-          />
+          <TaxTipForm billData={billData} onUpdate={updateTaxAndTip} />
         )}
+
+        
 
         {/* Feature Cards (only show when no bill data) */}
         {showFeatureCards && (
