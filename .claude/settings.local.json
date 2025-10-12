@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "mcp__ide__getDiagnostics",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx create-expo-app:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npm install:*)",
+      "Bash(npx expo start:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []
