@@ -8,6 +8,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { VenmoChargeDialog } from '@/components/venmo/VenmoChargeDialog';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { useToast } from '@/hooks/use-toast';
+import { UI_TEXT, ERROR_MESSAGES } from '@/utils/uiConstants';
 
 interface Props {
   personTotals: PersonTotal[];
@@ -50,8 +51,8 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billData,
   const handleChargeOnVenmo = (personTotal: PersonTotal, personVenmoId?: string) => {
     if (!user) {
       toast({
-        title: 'Sign in required',
-        description: 'Please sign in to charge people on Venmo.',
+        title: ERROR_MESSAGES.SIGN_IN_REQUIRED,
+        description: ERROR_MESSAGES.SIGN_IN_FOR_VENMO,
         variant: 'destructive',
       });
       return;
@@ -59,8 +60,8 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billData,
 
     if (!profile?.venmoId) {
       toast({
-        title: 'Venmo ID required',
-        description: 'Please add your Venmo ID in Profile Settings first.',
+        title: ERROR_MESSAGES.VENMO_ID_REQUIRED,
+        description: ERROR_MESSAGES.VENMO_ID_REQUIRED_DESC,
         variant: 'destructive',
       });
       setSettingsDialogOpen(true);
@@ -83,7 +84,7 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billData,
     return (
       <Card className="p-6 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
         <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
-          Please assign all items to see the split summary
+          {ERROR_MESSAGES.ASSIGN_ALL_ITEMS}
         </p>
       </Card>
     );
@@ -98,7 +99,7 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billData,
       <Card className="p-3 md:p-6">
         <div className="flex items-center gap-2 mb-4">
           <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-          <h3 className="text-lg md:text-xl font-semibold">Split Summary</h3>
+          <h3 className="text-lg md:text-xl font-semibold">{UI_TEXT.SPLIT_SUMMARY}</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -139,7 +140,7 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billData,
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M19.384 4.616c.616.952.933 2.064.933 3.432 0 4.284-3.636 9.816-6.612 13.248H6.864L4.8 4.728l6.12-.576 1.176 13.488c1.44-2.304 3.576-6.144 3.576-8.688 0-1.176-.24-2.064-.696-2.832l4.608-1.504z"/>
                     </svg>
-                    Charge on Venmo
+                    {UI_TEXT.CHARGE_ON_VENMO}
                   </Button>
                 );
               })()}

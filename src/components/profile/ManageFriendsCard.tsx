@@ -1,103 +1,39 @@
-import { useState, useEffect } from 'react';
 import { Users, Trash2, UserPlus, Pencil, Check, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { useFriendsEditor } from '@/hooks/useFriendsEditor';
 import { useToast } from '@/hooks/use-toast';
-
-interface Friend {
-  name: string;
-  venmoId?: string;
-}
+import { UI_TEXT, SUCCESS_MESSAGES } from '@/utils/uiConstants';
 
 export function ManageFriendsCard() {
-  const { profile, updateFriends } = useUserProfile();
+  const {
+    friends,
+    newFriendName,
+    newFriendVenmoId,
+    hasChanges,
+    saving,
+    editingIndex,
+    editingName,
+    editingVenmoId,
+    setNewFriendName,
+    setNewFriendVenmoId,
+    setEditingName,
+    setEditingVenmoId,
+    handleAddFriend,
+    handleRemoveFriend,
+    handleEditFriend,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleSaveAll: saveAll,
+  } = useFriendsEditor();
   const { toast } = useToast();
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [newFriendName, setNewFriendName] = useState('');
-  const [newFriendVenmoId, setNewFriendVenmoId] = useState('');
-  const [hasChanges, setHasChanges] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editingName, setEditingName] = useState('');
-  const [editingVenmoId, setEditingVenmoId] = useState('');
-
-  useEffect(() => {
-    if (profile?.friends) {
-      setFriends(profile.friends);
-    }
-  }, [profile]);
-
-  const handleAddFriend = () => {
-    if (!newFriendName.trim()) {
-      toast({
-        title: 'Name required',
-        description: 'Please enter a friend\'s name.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const newFriend: Friend = {
-      name: newFriendName.trim(),
-      venmoId: newFriendVenmoId.trim() || undefined,
-    };
-
-    setFriends([...friends, newFriend]);
-    setNewFriendName('');
-    setNewFriendVenmoId('');
-    setHasChanges(true);
-  };
-
-  const handleRemoveFriend = (index: number) => {
-    setFriends(friends.filter((_, i) => i !== index));
-    setHasChanges(true);
-  };
-
-  const handleEditFriend = (index: number) => {
-    setEditingIndex(index);
-    setEditingName(friends[index].name);
-    setEditingVenmoId(friends[index].venmoId || '');
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingName.trim()) {
-      toast({
-        title: 'Name required',
-        description: 'Please enter a friend\'s name.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const updatedFriends = [...friends];
-    updatedFriends[editingIndex!] = {
-      name: editingName.trim(),
-      venmoId: editingVenmoId.trim() || undefined,
-    };
-
-    setFriends(updatedFriends);
-    setEditingIndex(null);
-    setEditingName('');
-    setEditingVenmoId('');
-    setHasChanges(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingIndex(null);
-    setEditingName('');
-    setEditingVenmoId('');
-  };
 
   const handleSaveAll = async () => {
-    setSaving(true);
-    await updateFriends(friends);
-    setSaving(false);
-    setHasChanges(false);
+    await saveAll();
     toast({
-      title: 'Friends updated',
-      description: 'Your friends list has been updated successfully.',
+      title: SUCCESS_MESSAGES.FRIENDS_UPDATED,
+      description: SUCCESS_MESSAGES.FRIENDS_UPDATED_DESC,
     });
   };
 
@@ -110,7 +46,7 @@ export function ManageFriendsCard() {
         </div>
         {hasChanges && (
           <Button onClick={handleSaveAll} disabled={saving} size="sm">
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? UI_TEXT.SAVING : UI_TEXT.SAVE_CHANGES}
           </Button>
         )}
       </div>

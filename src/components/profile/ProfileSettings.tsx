@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { User as UserIcon } from 'lucide-react';
 import {
   Dialog,
@@ -10,8 +9,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useAuth } from '@/contexts/AuthContext';
+import { useProfileEditor } from '@/hooks/useProfileEditor';
+import { UI_TEXT, DIALOG_DESCRIPTIONS } from '@/utils/uiConstants';
 
 interface Props {
   open: boolean;
@@ -19,21 +18,17 @@ interface Props {
 }
 
 export function ProfileSettings({ open, onOpenChange }: Props) {
-  const { user } = useAuth();
-  const { profile, loading, updateVenmoId } = useUserProfile();
-  const [venmoId, setVenmoId] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (profile?.venmoId) {
-      setVenmoId(profile.venmoId);
-    }
-  }, [profile]);
+  const {
+    user,
+    profile,
+    venmoId,
+    saving,
+    setVenmoId,
+    handleSave: save,
+  } = useProfileEditor();
 
   const handleSave = async () => {
-    setSaving(true);
-    await updateVenmoId(venmoId.trim());
-    setSaving(false);
+    await save();
     onOpenChange(false);
   };
 
@@ -43,10 +38,10 @@ export function ProfileSettings({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserIcon className="w-5 h-5" />
-            Profile Settings
+            {UI_TEXT.PROFILE_SETTINGS}
           </DialogTitle>
           <DialogDescription>
-            Update your Venmo ID to enable charging others for their split.
+            {DIALOG_DESCRIPTIONS.PROFILE_SETTINGS}
           </DialogDescription>
         </DialogHeader>
 
@@ -73,9 +68,9 @@ export function ProfileSettings({ open, onOpenChange }: Props) {
 
           <div className="space-y-2">
             <Label htmlFor="venmoId">
-              Venmo Username
+              {UI_TEXT.VENMO_USERNAME}
               <span className="text-xs text-muted-foreground ml-2">
-                (without @)
+                {UI_TEXT.VENMO_WITHOUT_AT}
               </span>
             </Label>
             <Input
@@ -93,10 +88,10 @@ export function ProfileSettings({ open, onOpenChange }: Props) {
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {UI_TEXT.CANCEL}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? UI_TEXT.SAVING : UI_TEXT.SAVE_CHANGES}
           </Button>
         </div>
       </DialogContent>

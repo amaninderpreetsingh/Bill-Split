@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Users, Trash2, UserPlus, Pencil, Check, X } from 'lucide-react';
 import {
   Dialog,
@@ -9,98 +8,37 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useToast } from '@/hooks/use-toast';
+import { useFriendsEditor } from '@/hooks/useFriendsEditor';
+import { UI_TEXT, DIALOG_DESCRIPTIONS } from '@/utils/uiConstants';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-interface Friend {
-  name: string;
-  venmoId?: string;
-}
-
 export function ManageFriends({ open, onOpenChange }: Props) {
-  const { profile, updateFriends } = useUserProfile();
-  const { toast } = useToast();
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [newFriendName, setNewFriendName] = useState('');
-  const [newFriendVenmoId, setNewFriendVenmoId] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editingName, setEditingName] = useState('');
-  const [editingVenmoId, setEditingVenmoId] = useState('');
-
-  useEffect(() => {
-    if (profile?.friends) {
-      setFriends(profile.friends);
-    }
-  }, [profile]);
-
-  const handleAddFriend = () => {
-    if (!newFriendName.trim()) {
-      toast({
-        title: 'Name required',
-        description: 'Please enter a friend\'s name.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const newFriend: Friend = {
-      name: newFriendName.trim(),
-      venmoId: newFriendVenmoId.trim() || undefined,
-    };
-
-    setFriends([...friends, newFriend]);
-    setNewFriendName('');
-    setNewFriendVenmoId('');
-  };
-
-  const handleRemoveFriend = (index: number) => {
-    setFriends(friends.filter((_, i) => i !== index));
-  };
-
-  const handleEditFriend = (index: number) => {
-    setEditingIndex(index);
-    setEditingName(friends[index].name);
-    setEditingVenmoId(friends[index].venmoId || '');
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingName.trim()) {
-      toast({
-        title: 'Name required',
-        description: 'Please enter a friend\'s name.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const updatedFriends = [...friends];
-    updatedFriends[editingIndex!] = {
-      name: editingName.trim(),
-      venmoId: editingVenmoId.trim() || undefined,
-    };
-
-    setFriends(updatedFriends);
-    setEditingIndex(null);
-    setEditingName('');
-    setEditingVenmoId('');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingIndex(null);
-    setEditingName('');
-    setEditingVenmoId('');
-  };
+  const {
+    friends,
+    newFriendName,
+    newFriendVenmoId,
+    saving,
+    editingIndex,
+    editingName,
+    editingVenmoId,
+    setNewFriendName,
+    setNewFriendVenmoId,
+    setEditingName,
+    setEditingVenmoId,
+    handleAddFriend,
+    handleRemoveFriend,
+    handleEditFriend,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleSaveAll,
+  } = useFriendsEditor();
 
   const handleSave = async () => {
-    setSaving(true);
-    await updateFriends(friends);
-    setSaving(false);
+    await handleSaveAll();
     onOpenChange(false);
   };
 
@@ -113,7 +51,7 @@ export function ManageFriends({ open, onOpenChange }: Props) {
             Manage Friends
           </DialogTitle>
           <DialogDescription>
-            Add or remove friends to quickly add them to bills.
+            {DIALOG_DESCRIPTIONS.MANAGE_FRIENDS}
           </DialogDescription>
         </DialogHeader>
 
@@ -224,10 +162,10 @@ export function ManageFriends({ open, onOpenChange }: Props) {
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {UI_TEXT.CANCEL}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? UI_TEXT.SAVING : UI_TEXT.SAVE_CHANGES}
           </Button>
         </div>
       </DialogContent>

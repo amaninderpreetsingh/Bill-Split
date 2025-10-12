@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Users, Plus } from 'lucide-react';
 import {
   Dialog,
@@ -9,10 +8,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSquadManager } from '@/hooks/useSquadManager';
+import { useSquadEditor } from '@/hooks/useSquadEditor';
 import { SquadList } from './SquadList';
 import { SquadForm } from './SquadForm';
-import { Squad, SquadMember, CreateSquadInput } from '@/types/squad.types';
+import { DIALOG_DESCRIPTIONS } from '@/utils/uiConstants';
 
 interface ManageSquadsDialogProps {
   open: boolean;
@@ -20,48 +19,18 @@ interface ManageSquadsDialogProps {
 }
 
 export function ManageSquadsDialog({ open, onOpenChange }: ManageSquadsDialogProps) {
-  const { squads, loading, createSquad, updateSquad, deleteSquad } = useSquadManager();
-  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'edit'>('list');
-  const [editingSquad, setEditingSquad] = useState<Squad | null>(null);
-
-  const handleCreate = async (name: string, description: string, members: SquadMember[]) => {
-    const input: CreateSquadInput = { name, description, members };
-    const squadId = await createSquad(input);
-
-    if (squadId) {
-      setActiveTab('list');
-    }
-  };
-
-  const handleEdit = (squad: Squad) => {
-    setEditingSquad(squad);
-    setActiveTab('edit');
-  };
-
-  const handleUpdate = async (name: string, description: string, members: SquadMember[]) => {
-    if (!editingSquad) return;
-
-    const success = await updateSquad(editingSquad.id, { name, description, members });
-
-    if (success) {
-      setEditingSquad(null);
-      setActiveTab('list');
-    }
-  };
-
-  const handleDelete = async (squadId: string) => {
-    const confirmed = window.confirm('Are you sure you want to delete this squad?');
-    if (confirmed) {
-      await deleteSquad(squadId);
-    }
-  };
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as 'list' | 'create' | 'edit');
-    if (value === 'list') {
-      setEditingSquad(null);
-    }
-  };
+  const {
+    squads,
+    loading,
+    activeTab,
+    editingSquad,
+    handleCreate,
+    handleEdit,
+    handleUpdate,
+    handleDelete,
+    handleTabChange,
+    setActiveTab,
+  } = useSquadEditor();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,7 +41,7 @@ export function ManageSquadsDialog({ open, onOpenChange }: ManageSquadsDialogPro
             Manage Squads
           </DialogTitle>
           <DialogDescription>
-            Create and manage groups of people to quickly add them to bills
+            {DIALOG_DESCRIPTIONS.MANAGE_SQUADS}
           </DialogDescription>
         </DialogHeader>
 

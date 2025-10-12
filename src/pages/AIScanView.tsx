@@ -6,6 +6,7 @@ import { BillItems } from '@/components/bill/BillItems';
 import { BillSummary } from '@/components/bill/BillSummary';
 import { SplitSummary } from '@/components/people/SplitSummary';
 import { AssignmentModeToggle } from '@/components/bill/AssignmentModeToggle';
+import { FeatureCards } from '@/components/shared/FeatureCards';
 import { useBillSplitter } from '@/hooks/useBillSplitter';
 import { usePeopleManager } from '@/hooks/usePeopleManager';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -15,6 +16,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Receipt, Users, Upload, Edit } from 'lucide-react';
+import { UI_TEXT } from '@/utils/uiConstants';
 
 export default function AIScanView() {
   const isMobile = useIsMobile();
@@ -75,7 +77,7 @@ export default function AIScanView() {
                 onClick={handleStartOver}
                 className="text-sm text-muted-foreground hover:text-foreground underline"
               >
-                Start Over
+                {UI_TEXT.START_OVER}
               </button>
             </div>
           )}
@@ -116,7 +118,7 @@ export default function AIScanView() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2">
                     <Receipt className="w-5 h-5 text-primary" />
-                    <h3 className="text-xl font-semibold">Bill Items</h3>
+                    <h3 className="text-xl font-semibold">{UI_TEXT.BILL_ITEMS}</h3>
                   </div>
 
                   {people.people.length > 0 && !isMobile && (
@@ -156,7 +158,7 @@ export default function AIScanView() {
 
                 {people.people.length === 0 && !isMobile && bill.billData && (
                   <p className="text-sm text-muted-foreground text-center py-4 mt-4">
-                    Add people above to assign items
+                    {UI_TEXT.ADD_PEOPLE_TO_ASSIGN}
                   </p>
                 )}
 
@@ -186,7 +188,7 @@ export default function AIScanView() {
                 onClick={handleStartOver}
                 className="text-sm text-muted-foreground hover:text-foreground underline"
               >
-                Start Over
+                {UI_TEXT.START_OVER}
               </button>
             </div>
           )}
@@ -279,41 +281,7 @@ export default function AIScanView() {
         </TabsContent>
       </Tabs>
 
-      {!bill.billData && (
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
-              <Receipt className="w-6 h-6 text-primary" />
-            </div>
-            <h4 className="font-semibold">AI-Powered</h4>
-            <p className="text-sm text-muted-foreground">
-              Gemini AI extracts items, tax, and tip automatically
-            </p>
-          </Card>
-
-          <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-            <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mx-auto">
-              <Users className="w-6 h-6 text-accent" />
-            </div>
-            <h4 className="font-semibold">Fair Splitting</h4>
-            <p className="text-sm text-muted-foreground">
-              Assign items to people with proportional tax & tip
-            </p>
-          </Card>
-
-          <Card className="p-6 text-center space-y-3 hover:shadow-medium transition-all duration-300">
-            <div className="w-12 h-12 rounded-lg bg-primary-glow/10 flex items-center justify-center mx-auto">
-              <svg className="w-6 h-6 text-primary-glow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h4 className="font-semibold">Instant Results</h4>
-            <p className="text-sm text-muted-foreground">
-              See who owes what in seconds, no manual math needed
-            </p>
-          </Card>
-        </div>
-      )}
+      {!bill.billData && <FeatureCards />}
     </>
   );
 }
