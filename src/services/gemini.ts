@@ -1,12 +1,16 @@
 /**
- * @fileOverview Extracts bill details (line items with prices, tax, tip, total) from an image of a restaurant bill using Google Gemini API.
+ * @fileOverview Extracts bill details (line items with prices, tax, tip, total) from an image of a restaurant bill using Firebase Cloud Functions.
  *
- * - analyzeBillImage - A function that handles the bill extraction process.
+ * This service now calls a secure Firebase Cloud Function that handles Gemini AI API calls server-side,
+ * protecting the API key from client-side exposure.
+ *
+ * - analyzeBillImage - A function that handles the bill extraction process via Cloud Function
  * - BillItem - Individual line item with name and price
  * - BillData - The complete extracted bill data structure
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app } from '@/config/firebase';
 
 /**
  * Represents a single line item on the bill
@@ -28,108 +32,47 @@ export interface BillData {
   total: number;
 }
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+// Initialize Firebase Functions
+const functions = getFunctions(app);
 
 /**
  * Analyzes a restaurant bill image and extracts structured data
+ *
+ * This function calls a Firebase Cloud Function that securely handles the Gemini AI API call.
+ * The API key is stored server-side and never exposed to clients.
+ *
  * @param base64Image - A photo of a restaurant bill, as a data URI with MIME type and Base64 encoding
  * @returns Promise containing extracted bill data with line items, tax, tip, and total
  */
 export async function analyzeBillImage(base64Image: string): Promise<BillData> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // Call the Cloud Function
+    const analyzeBill = httpsCallable<{ base64Image: string }, BillData>(functions, 'analyzeBill');
+    const result = await analyzeBill({ base64Image });
 
-    const prompt = `You are an expert in extracting information from restaurant bills. Given an image of a bill, extract the line items (with individual prices), tax, and tip.
-
-IMPORTANT RULES:
-1. If an item has a quantity greater than 1 (e.g., "2 Burritos" or "Burrito x2"), create SEPARATE entries for each item.
-   For example: "2 Burritos @ $10 each" should become two separate burrito entries with $10 each.
-2. Extract individual item prices, not the total for multiple items.
-3. If the receipt shows "2 Burritos $20", divide by quantity to get individual price ($10 each).
-4. The line items should be a list of individual items with their names and prices.
-5. Tax, tip, subtotal, and total should be numerical values.
-
-Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
-{
-  "items": [
-    {"name": "Item Name", "price": 10.99},
-    {"name": "Item Name", "price": 10.99}
-  ],
-  "subtotal": 50.00,
-  "tax": 4.50,
-  "tip": 10.00,
-  "total": 64.50
-}
-
-Make sure:
-- Each item in a quantity appears as a separate entry in the items array
-- Each item has both "name" (string) and "price" (number)
-- All monetary values are positive numbers (not strings)
-- The items array contains individual items with individual prices`;
-
-    // Detect MIME type from base64 string
-    const mimeMatch = base64Image.match(/^data:([^;]+);base64,/);
-    const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-    const base64Data = base64Image.split(",")[1];
-
-    const imagePart = {
-      inlineData: {
-        data: base64Data,
-        mimeType: mimeType,
-      },
-    };
-
-    const result = await model.generateContent([prompt, imagePart]);
-    const response = await result.response;
-    const text = response.text();
-
-    // Clean up the response - remove markdown code blocks if present
-    let cleanedText = text.trim();
-
-    // Remove markdown code blocks (both ```json and ```)
-    cleanedText = cleanedText.replace(/^```json\s*/g, "").replace(/^```\s*/g, "");
-    cleanedText = cleanedText.replace(/```\s*$/g, "");
-    cleanedText = cleanedText.trim();
-
-    const billData: BillData = JSON.parse(cleanedText);
-
-    // Add unique IDs to each item
-    billData.items = billData.items.map((item, index) => ({
-      ...item,
-      id: `item-${index}-${Date.now()}`,
-    }));
-
-    // Validate the data structure
-    if (!billData.items || !Array.isArray(billData.items)) {
-      throw new Error("Invalid response: items array is missing");
-    }
-
-    if (billData.items.length === 0) {
-      throw new Error("No items found on the receipt");
-    }
-
-    // Validate each item has required fields
-    for (const item of billData.items) {
-      if (!item.name || typeof item.price !== "number") {
-        throw new Error("Invalid item structure: missing name or price");
-      }
-    }
-
-    if (
-      typeof billData.subtotal !== "number" ||
-      typeof billData.tax !== "number" ||
-      typeof billData.tip !== "number" ||
-      typeof billData.total !== "number"
-    ) {
-      throw new Error("Invalid response: missing required numeric fields");
-    }
-
-    return billData;
+    return result.data;
   } catch (error) {
-    console.error("Error analyzing bill:", error);
+    console.error('Error analyzing bill:', error);
+
+    // Handle Firebase Functions errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const functionsError = error as { code: string; message: string };
+
+      if (functionsError.code === 'unauthenticated') {
+        throw new Error('Please sign in to analyze receipts');
+      }
+
+      if (functionsError.code === 'invalid-argument') {
+        throw new Error('Invalid image format. Please upload a valid receipt image');
+      }
+
+      throw new Error(`Failed to analyze receipt: ${functionsError.message}`);
+    }
+
     if (error instanceof Error) {
       throw new Error(`Failed to analyze receipt: ${error.message}`);
     }
-    throw new Error("Failed to analyze receipt. Please try again.");
+
+    throw new Error('Failed to analyze receipt. Please try again.');
   }
 }
