@@ -1,4 +1,5 @@
 import { VenmoCharge } from '@/types';
+import { Capacitor } from '@capacitor/core';
 
 export function constructVenmoDeepLink(charge: VenmoCharge): string {
   const encodedNote = encodeURIComponent(charge.note);
@@ -9,8 +10,15 @@ export function constructVenmoDeepLink(charge: VenmoCharge): string {
 
 export function openVenmoApp(charge: VenmoCharge): void {
   const deepLink = constructVenmoDeepLink(charge);
+  const isNative = Capacitor.isNativePlatform();
 
-  window.location.href = deepLink;
+  if (isNative) {
+    // Mobile: Open in external app using _system
+    window.open(deepLink, '_system');
+  } else {
+    // Web: Use window location
+    window.location.href = deepLink;
+  }
 }
 
 export function isVenmoInstalled(): boolean {

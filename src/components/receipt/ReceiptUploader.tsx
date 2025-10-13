@@ -1,6 +1,8 @@
 import { Upload, X, ImageIcon, Loader2, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { usePlatform } from '@/hooks/usePlatform';
+import { useImagePicker } from '@/hooks/useImagePicker';
 
 interface Props {
   selectedFile: File | null;
@@ -13,6 +15,7 @@ interface Props {
   onDrop: (e: React.DragEvent) => void;
   onRemove: () => void;
   onAnalyze: () => void;
+  onImageSelected?: (base64Image: string) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
 }
 
@@ -27,8 +30,24 @@ export function ReceiptUploader({
   onDrop,
   onRemove,
   onAnalyze,
+  onImageSelected,
   fileInputRef,
 }: Props) {
+  const { isNative } = usePlatform();
+  const { pickImage } = useImagePicker();
+
+  const handleSelectImage = async () => {
+    if (isNative && onImageSelected) {
+      // Mobile: Use camera picker
+      const image = await pickImage();
+      if (image) {
+        onImageSelected(image);
+      }
+    } else {
+      // Web: Trigger file input
+      fileInputRef.current?.click();
+    }
+  };
   return (
     <Card
       className={`p-4 md:p-8 shadow-medium border-2 border-dashed transition-all duration-300 ${
@@ -55,21 +74,23 @@ export function ReceiptUploader({
             </p>
           </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/heic,image/heif"
-            onChange={onFileInput}
-            className="hidden"
-          />
+          {!isNative && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/heic,image/heif"
+              onChange={onFileInput}
+              className="hidden"
+            />
+          )}
 
           <Button
             size="lg"
             className="bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleSelectImage}
           >
             <Upload className="mr-2 h-5 w-5" />
-            Choose File
+            {isNative ? 'Take Photo' : 'Choose File'}
           </Button>
 
           <p className="text-sm text-muted-foreground">

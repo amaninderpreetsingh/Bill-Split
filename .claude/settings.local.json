@@ -10,7 +10,12 @@
       "Bash(npm uninstall:*)",
       "Bash(npm start)",
       "Bash(npm run build:dev:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(npx cap add:*)",
+      "Bash(npx cap:*)",
+      "Bash(pod install)"
     ],
     "deny": [],
     "ask": []
