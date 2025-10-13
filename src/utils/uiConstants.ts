@@ -58,6 +58,29 @@ export const UI_TEXT = {
   NO_SQUADS_YET: 'No squads yet. Create a squad to quickly add groups to bills.',
 } as const;
 
+// Form labels and placeholders
+export const FORM_LABELS = {
+  ITEM_NAME: 'Item Name',
+  ENTER_ITEM_NAME: 'Enter item name',
+  PRICE: 'Price',
+  PRICE_PLACEHOLDER: '0.00',
+  ASSIGN_TO: 'Assign to:',
+} as const;
+
+// Navigation labels
+export const NAVIGATION = {
+  AI_SCAN: 'AI Scan',
+  GROUPS: 'Groups',
+  BACK_TO_GROUPS: 'Back to Groups',
+} as const;
+
+// Loading and status messages
+export const LOADING = {
+  LOADING_GROUP: 'Loading group...',
+  GROUP_NOT_FOUND: 'Group not found',
+  LOADING_SQUADS: 'Loading squads...',
+} as const;
+
 // Error and validation messages
 export const ERROR_MESSAGES = {
   NAME_REQUIRED: 'Name required',

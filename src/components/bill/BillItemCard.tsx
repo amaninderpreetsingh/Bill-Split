@@ -1,9 +1,10 @@
-import { Check, Pencil, Trash2, X, Plus, Users } from 'lucide-react';
+import { Pencil, Trash2, Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { BillData, BillItem, Person, ItemAssignment } from '@/types';
+import { BillData, Person, ItemAssignment } from '@/types';
 import { ItemAssignmentBadges } from '../shared/ItemAssignmentBadges';
+import { ItemFormFields } from './ItemFormFields';
+import { UI_TEXT, FORM_LABELS } from '@/utils/uiConstants';
 
 interface Props {
   billData: BillData | null;
@@ -64,7 +65,7 @@ export function BillItemCard({
         <div className="mb-3 flex flex-col gap-2">
           <Button onClick={onStartAdding} className="w-full gap-2">
             <Plus className="w-4 h-4" />
-            Add Item
+            {UI_TEXT.ADD_ITEM}
           </Button>
           {people.length > 0 && (
             <Button
@@ -73,58 +74,31 @@ export function BillItemCard({
               className="w-full gap-2"
             >
               <Users className="w-4 h-4" />
-              Split Evenly
+              {UI_TEXT.SPLIT_EVENLY}
             </Button>
           )}
         </div>
       )}
 
       {isAdding && (
-        <Card className="p-3 md:p-4 space-y-2 md:space-y-3 border-2 border-primary mb-3">
-          <div>
-            <label className="text-sm font-medium text-muted-foreground mb-1 block">Item Name</label>
-            <Input
-              placeholder="Enter item name"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && newItemPrice && onAddItem()}
-              className="text-sm md:text-base"
-              autoFocus
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-muted-foreground mb-1 block">Price</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                type="number"
-                placeholder="0.00"
-                value={newItemPrice}
-                onChange={(e) => setNewItemPrice(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && newItemName && onAddItem()}
-                className="text-sm md:text-base text-right pl-8"
-                step="0.01"
-                min="0"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={onAddItem}>
-              <Check className="w-4 h-4 mr-2" />
-              Add Item
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={onCancelAdding}>
-              <X className="w-4 h-4 mr-2" />
-              Cancel
-            </Button>
-          </div>
+        <Card className="p-3 md:p-4 border-2 border-primary mb-3">
+          <ItemFormFields
+            mode="add"
+            itemName={newItemName}
+            itemPrice={newItemPrice}
+            onNameChange={setNewItemName}
+            onPriceChange={setNewItemPrice}
+            onSave={onAddItem}
+            onCancel={onCancelAdding}
+            layout="card"
+          />
         </Card>
       )}
 
       {items.length === 0 && !isAdding && (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">
-            No items yet. Click "Add Item" to get started.
+            {UI_TEXT.NO_ITEMS_YET}
           </p>
         </Card>
       )}
@@ -143,40 +117,16 @@ export function BillItemCard({
       }`}
     >
       {isEditing ? (
-        <div className="space-y-2 md:space-y-3">
-          <div>
-            <label className="text-sm font-medium text-muted-foreground mb-1 block">Item Name</label>
-            <Input
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              className="text-sm md:text-base"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-muted-foreground mb-1 block">Price</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                type="number"
-                value={editingPrice}
-                onChange={(e) => setEditingPrice(e.target.value)}
-                className="text-sm md:text-base text-right pl-8"
-                step="0.01"
-                min="0"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={onSave}>
-              <Check className="w-4 h-4 mr-2" />
-              Save
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={onCancel}>
-              <X className="w-4 h-4 mr-2" />
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <ItemFormFields
+          mode="edit"
+          itemName={editingName}
+          itemPrice={editingPrice}
+          onNameChange={setEditingName}
+          onPriceChange={setEditingPrice}
+          onSave={onSave}
+          onCancel={onCancel}
+          layout="card"
+        />
       ) : (
         <>
           <div className="flex justify-between items-start">
@@ -206,7 +156,7 @@ export function BillItemCard({
 
           {people.length > 0 && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Assign to:</label>
+              <label className="text-sm font-medium text-muted-foreground">{FORM_LABELS.ASSIGN_TO}</label>
               <ItemAssignmentBadges
                 item={item}
                 people={people}

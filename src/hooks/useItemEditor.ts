@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { BillData } from '@/types';
 import { useToast } from './use-toast';
+import { calculateBillTotals, generateItemId } from '@/utils/billCalculations';
+import { validateItemInput, parsePrice } from '@/utils/validation';
 
+/**
+ * Hook for managing bill item editing and adding operations
+ * @param billData - Current bill data
+ * @param setBillData - Function to update bill data
+ * @param customTip - Custom tip amount as string
+ * @param removeItemAssignments - Function to remove item assignments
+ * @returns Item editor state and handlers
+ */
 export function useItemEditor(
   billData: BillData | null,
   setBillData: (data: BillData) => void,
@@ -25,38 +35,32 @@ export function useItemEditor(
   const saveEdit = () => {
     if (!billData || !editingItemId) return;
 
-    const price = parseFloat(editingItemPrice);
-    if (isNaN(price) || price < 0) {
+    // Validate input
+    const validation = validateItemInput(editingItemName, editingItemPrice);
+    if (!validation.isValid && validation.error) {
       toast({
-        title: 'Invalid price',
-        description: 'Please enter a valid price.',
+        title: validation.error.title,
+        description: validation.error.description,
         variant: 'destructive',
       });
       return;
     }
 
-    if (!editingItemName.trim()) {
-      toast({
-        title: 'Invalid name',
-        description: 'Item name cannot be empty.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    const price = parsePrice(editingItemPrice);
     const updatedItems = billData.items.map(item =>
       item.id === editingItemId
         ? { ...item, name: editingItemName.trim(), price }
         : item
     );
 
-    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price, 0);
+    const tip = parsePrice(customTip) || billData.tip;
+    const { subtotal, total } = calculateBillTotals(updatedItems, billData.tax, tip);
 
     setBillData({
       ...billData,
       items: updatedItems,
-      subtotal: newSubtotal,
-      total: newSubtotal + billData.tax + (parseFloat(customTip) || billData.tip),
+      subtotal,
+      total,
     });
 
     cancelEdit();
@@ -72,13 +76,14 @@ export function useItemEditor(
     if (!billData) return;
 
     const updatedItems = billData.items.filter(item => item.id !== itemId);
-    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price, 0);
+    const tip = parsePrice(customTip) || billData.tip;
+    const { subtotal, total } = calculateBillTotals(updatedItems, billData.tax, tip);
 
     setBillData({
       ...billData,
       items: updatedItems,
-      subtotal: newSubtotal,
-      total: newSubtotal + billData.tax + (parseFloat(customTip) || billData.tip),
+      subtotal,
+      total,
     });
 
     removeItemAssignments(itemId);
@@ -96,30 +101,22 @@ export function useItemEditor(
   };
 
   const addItem = () => {
-    const price = parseFloat(newItemPrice);
-
-    if (!newItemName.trim()) {
+    // Validate input
+    const validation = validateItemInput(newItemName, newItemPrice);
+    if (!validation.isValid && validation.error) {
       toast({
-        title: 'Invalid name',
-        description: 'Item name cannot be empty.',
+        title: validation.error.title,
+        description: validation.error.description,
         variant: 'destructive',
       });
       return;
     }
 
-    if (isNaN(price) || price < 0) {
-      toast({
-        title: 'Invalid price',
-        description: 'Please enter a valid price.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    const price = parsePrice(newItemPrice);
     const newItem = {
-      id: `item-${Date.now()}`,
+      id: generateItemId(),
       name: newItemName.trim(),
-      price: price,
+      price,
     };
 
     if (!billData) {
@@ -135,13 +132,14 @@ export function useItemEditor(
     } else {
       // Add to existing bill
       const updatedItems = [...billData.items, newItem];
-      const newSubtotal = updatedItems.reduce((sum, item) => sum + item.price, 0);
+      const tip = parsePrice(customTip) || billData.tip;
+      const { subtotal, total } = calculateBillTotals(updatedItems, billData.tax, tip);
 
       setBillData({
         ...billData,
         items: updatedItems,
-        subtotal: newSubtotal,
-        total: newSubtotal + billData.tax + (parseFloat(customTip) || billData.tip),
+        subtotal,
+        total,
       });
     }
 

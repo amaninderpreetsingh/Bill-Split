@@ -3,6 +3,15 @@ import { analyzeBillImage, BillData } from '@/services/gemini';
 import { MOCK_BILL_DATA, MOCK_PEOPLE } from '@/utils/constants';
 import { Person } from '@/types';
 import { useToast } from './use-toast';
+import { mergeBillData } from '@/utils/billCalculations';
+
+/**
+ * Hook for analyzing receipts using AI and loading mock data
+ * @param setBillData - Function to update bill data
+ * @param setPeople - Function to update people list
+ * @param currentBillData - Current bill data (for merging)
+ * @returns Receipt analyzer state and handlers
+ */
 
 export function useReceiptAnalyzer(
   setBillData: (data: BillData | null) => void,
@@ -19,21 +28,9 @@ export function useReceiptAnalyzer(
     try {
       const data = await analyzeBillImage(imagePreview);
 
-      // If there's existing bill data, append new items instead of replacing
+      // If there's existing bill data, merge with new data
       if (currentBillData) {
-        const mergedData: BillData = {
-          ...currentBillData,
-          items: [...currentBillData.items, ...data.items],
-          // Update subtotal by adding new items
-          subtotal: currentBillData.subtotal + data.subtotal,
-          // Keep existing tax and tip, or use new ones if current is 0
-          tax: currentBillData.tax || data.tax,
-          tip: currentBillData.tip || data.tip,
-          // Update total
-          total: currentBillData.subtotal + data.subtotal + (currentBillData.tax || data.tax) + (currentBillData.tip || data.tip),
-          // Use existing restaurant name if available
-          restaurantName: currentBillData.restaurantName || data.restaurantName,
-        };
+        const mergedData = mergeBillData(currentBillData, data);
         setBillData(mergedData);
         toast({
           title: 'Success!',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Edit } from 'lucide-react';
+import { ArrowLeft, Upload, Edit, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,7 +19,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Group } from '@/types/group.types';
-import { Receipt } from 'lucide-react';
+import { UI_TEXT, NAVIGATION, LOADING } from '@/utils/uiConstants';
 
 export default function GroupDetailView() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -86,14 +86,14 @@ export default function GroupDetailView() {
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-muted-foreground">Loading group...</div>;
+    return <div className="text-center py-12 text-muted-foreground">{LOADING.LOADING_GROUP}</div>;
   }
 
   if (!group) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground mb-4">Group not found</p>
-        <Button onClick={() => navigate('/groups')}>Back to Groups</Button>
+        <p className="text-muted-foreground mb-4">{LOADING.GROUP_NOT_FOUND}</p>
+        <Button onClick={() => navigate('/groups')}>{NAVIGATION.BACK_TO_GROUPS}</Button>
       </div>
     );
   }
@@ -107,7 +107,7 @@ export default function GroupDetailView() {
           onClick={() => navigate('/groups')}
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Groups
+          {NAVIGATION.BACK_TO_GROUPS}
         </Button>
 
         <div className="space-y-2">
@@ -124,7 +124,7 @@ export default function GroupDetailView() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="ai-scan" className="gap-2">
             <Upload className="w-4 h-4" />
-            AI Scan
+            {NAVIGATION.AI_SCAN}
           </TabsTrigger>
           <TabsTrigger value="manual" className="gap-2">
             <Edit className="w-4 h-4" />
@@ -139,7 +139,7 @@ export default function GroupDetailView() {
                 onClick={handleStartOver}
                 className="text-sm text-muted-foreground hover:text-foreground underline"
               >
-                Start Over
+{UI_TEXT.START_OVER}
               </button>
             </div>
           )}
@@ -180,7 +180,7 @@ export default function GroupDetailView() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2">
                     <Receipt className="w-5 h-5 text-primary" />
-                    <h3 className="text-xl font-semibold">Bill Items</h3>
+                    <h3 className="text-xl font-semibold">{UI_TEXT.BILL_ITEMS}</h3>
                   </div>
 
                   {people.people.length > 0 && !isMobile && (
@@ -220,7 +220,7 @@ export default function GroupDetailView() {
 
                 {people.people.length === 0 && !isMobile && bill.billData && (
                   <p className="text-sm text-muted-foreground text-center py-4 mt-4">
-                    Add people above to assign items
+{UI_TEXT.ADD_PEOPLE_TO_ASSIGN}
                   </p>
                 )}
 
@@ -250,7 +250,7 @@ export default function GroupDetailView() {
                 onClick={handleStartOver}
                 className="text-sm text-muted-foreground hover:text-foreground underline"
               >
-                Start Over
+{UI_TEXT.START_OVER}
               </button>
             </div>
           )}

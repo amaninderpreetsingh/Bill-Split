@@ -3,6 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from './useUserProfile';
 import { Person } from '@/types';
 import { useToast } from './use-toast';
+import { generatePersonId, generateUserId } from '@/utils/billCalculations';
+import { validatePersonInput } from '@/utils/validation';
+import { saveFriendToFirestore, createPersonObject } from '@/utils/firestore';
+
+/**
+ * Hook for managing people on a bill
+ * Handles adding, removing, and syncing with Firestore friends list
+ * @returns People state and management handlers
+ */
 
 export function usePeopleManager() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -16,10 +25,11 @@ export function usePeopleManager() {
 
   useEffect(() => {
     if (user && user.displayName) {
-      const userExists = people.some(person => person.id === `user-${user.uid}`);
+      const userId = generateUserId(user.uid);
+      const userExists = people.some(person => person.id === userId);
       if (!userExists) {
         const currentUser: Person = {
-          id: `user-${user.uid}`,
+          id: userId,
           name: user.displayName,
           venmoId: profile?.venmoId,
         };
@@ -29,62 +39,46 @@ export function usePeopleManager() {
   }, [user, profile?.venmoId]);
 
   const addPerson = async () => {
-    if (!newPersonName.trim()) {
+    // Validate input
+    const validation = validatePersonInput(newPersonName);
+    if (!validation.isValid && validation.error) {
       toast({
-        title: 'Name required',
-        description: "Please enter a person's name.",
+        title: validation.error.title,
+        description: validation.error.description,
         variant: 'destructive',
       });
       return;
     }
 
-    const venmoId = useNameAsVenmoId
-      ? newPersonName.trim()
-      : newPersonVenmoId.trim() || undefined;
+    // Create person object with proper venmoId handling
+    const personData = createPersonObject(newPersonName, newPersonVenmoId, useNameAsVenmoId);
 
     const newPerson: Person = {
-      id: `person-${Date.now()}`,
-      name: newPersonName.trim(),
-      venmoId: venmoId,
+      id: generatePersonId(),
+      ...personData,
     };
 
     setPeople([...people, newPerson]);
 
     // Save to friends list in Firestore if checked
     if (saveToFriendsList && user) {
-      try {
-        const { doc, setDoc, arrayUnion } = await import('firebase/firestore');
-        const { db } = await import('@/config/firebase');
+      const result = await saveFriendToFirestore(user.uid, personData);
 
-        const userDocRef = doc(db, 'users', user.uid);
-
-        // Build friend object, only include venmoId if it exists
-        const friendData: { name: string; venmoId?: string } = {
-          name: newPersonName.trim(),
-        };
-
-        if (venmoId) {
-          friendData.venmoId = venmoId;
-        }
-
-        await setDoc(userDocRef, {
-          friends: arrayUnion(friendData)
-        }, { merge: true });
-
+      if (result.success) {
         toast({
           title: 'Saved to friends',
-          description: `${newPersonName.trim()} has been saved to your friends list.`,
+          description: `${personData.name} has been saved to your friends list.`,
         });
-      } catch (error) {
-        console.error('Error saving to friends:', error);
+      } else if (result.error) {
         toast({
-          title: 'Error saving friend',
-          description: 'Could not save to friends list.',
+          title: result.error.title,
+          description: result.error.description,
           variant: 'destructive',
         });
       }
     }
 
+    // Reset form
     setNewPersonName('');
     setNewPersonVenmoId('');
     setUseNameAsVenmoId(false);
@@ -97,7 +91,7 @@ export function usePeopleManager() {
 
   const addFromFriend = (friend: { name: string; venmoId?: string }) => {
     const newPerson: Person = {
-      id: `person-${Date.now()}`,
+      id: generatePersonId(),
       name: friend.name,
       venmoId: friend.venmoId,
     };
