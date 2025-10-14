@@ -50,6 +50,12 @@ export default function AIScanView() {
     await analyzer.analyzeReceipt(upload.imagePreview);
   };
 
+  const handleImageSelected = (base64Image: string) => {
+    // For camera images, we don't have a File object, just set the preview
+    upload.setImagePreview(base64Image);
+    upload.setSelectedFile(null);
+  };
+
   return (
     <>
       <HeroSection
@@ -71,16 +77,6 @@ export default function AIScanView() {
         </TabsList>
 
         <TabsContent value="ai-scan" className="space-y-6">
-          {bill.billData && (
-            <div className="flex justify-end">
-              <button
-                onClick={handleStartOver}
-                className="text-sm text-muted-foreground hover:text-foreground underline"
-              >
-                {UI_TEXT.START_OVER}
-              </button>
-            </div>
-          )}
 
           <ReceiptUploader
             selectedFile={upload.selectedFile}
@@ -94,6 +90,7 @@ export default function AIScanView() {
             onDrop={upload.handleDrop}
             onRemove={upload.handleRemoveImage}
             onAnalyze={handleAnalyzeReceipt}
+            onImageSelected={handleImageSelected}
             fileInputRef={upload.fileInputRef}
           />
 
@@ -183,17 +180,6 @@ export default function AIScanView() {
         </TabsContent>
 
         <TabsContent value="manual" className="space-y-6">
-          {bill.billData && (
-            <div className="flex justify-end">
-              <button
-                onClick={handleStartOver}
-                className="text-sm text-muted-foreground hover:text-foreground underline"
-              >
-                {UI_TEXT.START_OVER}
-              </button>
-            </div>
-          )}
-
           <div className="space-y-6">
             <PeopleManager
               people={people.people}

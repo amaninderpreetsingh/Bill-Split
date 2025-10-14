@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 export function Layout() {
   const isMobile = useIsMobile();
 
-  const mainPaddingBottom = isMobile ? 'pb-16' : 'pb-12';
+  const mainPaddingBottom = isMobile ? 'pb-24' : 'pb-12';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 flex flex-col">
