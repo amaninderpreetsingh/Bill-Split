@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.billsplit.app',
+  appId: 'com.billsplitAman.app',
   appName: 'Bill Split',
   webDir: 'dist',
   server: {

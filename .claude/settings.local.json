@@ -16,8 +16,9 @@
       "Bash(npx cap add:*)",
       "Bash(npx cap:*)",
       "Bash(pod install)",
-      "Bash(dir:*)",
-      "Bash(findstr:*)"
+      "Read(//Applications/**)",
+      "Bash(open /Users/simran/Documents/GitHub/Bill-Split/ios/App/App.xcworkspace)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

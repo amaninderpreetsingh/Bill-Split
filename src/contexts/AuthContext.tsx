@@ -1,8 +1,10 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { User, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import React, { createContext, useContext, ReactNode, useEffect } from 'react';
+import { User, signInWithPopup, signInWithCredential, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, googleProvider } from '@/config/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 interface AuthContextType {
   user: User | null | undefined;
@@ -31,13 +33,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
-      toast({
-        title: 'Welcome!',
-        description: 'Successfully signed in with Google.',
-      });
+      const isNative = Capacitor.isNativePlatform();
+      console.log('[Auth] Sign in started, isNative:', isNative);
+
+      if (isNative) {
+        // Use native Capacitor plugin for mobile apps
+        console.log('[Auth] Calling FirebaseAuthentication.signInWithGoogle()');
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        console.log('[Auth] Native sign-in result:', JSON.stringify(result, null, 2));
+
+        if (!result.credential?.idToken) {
+          throw new Error('No ID token received from Google Sign-In');
+        }
+
+        // Create Firebase credential from the result
+        console.log('[Auth] Creating Google credential');
+        const credential = GoogleAuthProvider.credential(result.credential.idToken);
+
+        // Sign in to Firebase with the credential
+        console.log('[Auth] Signing in to Firebase with credential');
+        await signInWithCredential(auth, credential);
+
+        console.log('[Auth] Sign in successful!');
+        toast({
+          title: 'Welcome!',
+          description: 'Successfully signed in with Google.',
+        });
+      } else {
+        // Use popup for web
+        console.log('[Auth] Using popup sign-in for web');
+        await signInWithPopup(auth, googleProvider);
+        toast({
+          title: 'Welcome!',
+          description: 'Successfully signed in with Google.',
+        });
+      }
     } catch (error: any) {
-      console.error('Error signing in with Google:', error);
+      console.error('[Auth] Error signing in with Google:', {
+        message: error.message,
+        code: error.code,
+        fullError: error
+      });
+
+      // Handle user cancellation gracefully
+      if (error.code === 'auth/cancelled-popup-request' ||
+          error.code === 'auth/popup-closed-by-user' ||
+          error.message?.includes('cancel')) {
+        console.log('[Auth] User cancelled sign-in');
+        return; // Don't show error toast for cancellation
+      }
+
       toast({
         title: 'Sign in failed',
         description: error.message || 'Could not sign in with Google. Please try again.',
