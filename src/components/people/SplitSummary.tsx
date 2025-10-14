@@ -51,7 +51,7 @@ export function SplitSummary({ personTotals, allItemsAssigned, people, billData,
   const handleChargeOnVenmo = (personTotal: PersonTotal, personVenmoId?: string) => {
     if (!user) {
       toast({
-        title: ERROR_MESSAGES.SIGN_IN_REQUIRED,
+        title: UI_TEXT.SIGN_IN_REQUIRED,
         description: ERROR_MESSAGES.SIGN_IN_FOR_VENMO,
         variant: 'destructive',
       });
