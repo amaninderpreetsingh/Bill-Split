@@ -9,6 +9,7 @@ interface Props {
   imagePreview: string | null;
   isDragging: boolean;
   isAnalyzing: boolean;
+  isMobile?: boolean;
   onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: (e: React.DragEvent) => void;
@@ -24,6 +25,7 @@ export function ReceiptUploader({
   imagePreview,
   isDragging,
   isAnalyzing,
+  isMobile = false,
   onFileInput,
   onDragOver,
   onDragLeave,
@@ -50,12 +52,16 @@ export function ReceiptUploader({
   };
   return (
     <Card
-      className={`p-4 md:p-8 shadow-medium border-2 border-dashed transition-all duration-300 ${
+      className={`shadow-medium border-2 border-dashed transition-all duration-300 ${
+        imagePreview ? 'p-3 md:p-4' : 'p-4 md:p-8'
+      } ${
         isDragging
           ? 'border-primary bg-primary/10 scale-[1.02]'
           : imagePreview
           ? 'border-primary/40'
           : 'border-primary/20 hover:border-primary/40'
+      } ${
+        isMobile && !imagePreview ? 'min-h-[60vh] flex items-center justify-center' : ''
       }`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -98,14 +104,14 @@ export function ReceiptUploader({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-primary" />
-              <span className="font-medium">{selectedFile?.name}</span>
+              <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+              <span className="font-medium text-sm md:text-base truncate">{selectedFile?.name}</span>
             </div>
             <Button variant="ghost" size="sm" onClick={onRemove}>
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3 md:w-4 md:h-4" />
             </Button>
           </div>
 
@@ -113,7 +119,7 @@ export function ReceiptUploader({
             <img
               src={imagePreview}
               alt="Receipt preview"
-              className="w-full h-auto max-h-96 object-contain"
+              className="w-full h-auto max-h-48 md:max-h-80 object-contain"
             />
           </div>
 
@@ -136,7 +142,7 @@ export function ReceiptUploader({
             )}
           </Button>
           {isAnalyzing && (
-            <p className="text-sm text-muted-foreground text-center mt-2">
+            <p className="text-xs md:text-sm text-muted-foreground text-center mt-2">
               This may take a few moments. AI is extracting items from your receipt...
             </p>
           )}

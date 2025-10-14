@@ -13,6 +13,13 @@ export default {
       },
     },
     extend: {
+      fontSize: {
+        'fluid-xs': 'clamp(0.75rem, 2vw, 0.875rem)',
+        'fluid-sm': 'clamp(0.875rem, 2.5vw, 1rem)',
+        'fluid-base': 'clamp(1rem, 3vw, 1.125rem)',
+        'fluid-lg': 'clamp(1.125rem, 4vw, 1.25rem)',
+        'fluid-xl': 'clamp(1.25rem, 5vw, 1.5rem)',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

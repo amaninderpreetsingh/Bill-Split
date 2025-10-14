@@ -87,6 +87,7 @@ export default function AIScanView() {
             imagePreview={upload.imagePreview}
             isDragging={upload.isDragging}
             isAnalyzing={analyzer.isAnalyzing}
+            isMobile={isMobile}
             onFileInput={upload.handleFileInput}
             onDragOver={upload.handleDragOver}
             onDragLeave={upload.handleDragLeave}

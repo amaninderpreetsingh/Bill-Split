@@ -237,7 +237,6 @@ export function PeopleManager({
             value={newPersonVenmoId}
             onChange={(e) => onVenmoIdChange(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
-            className="text-sm"
           />
         )}
       </div>

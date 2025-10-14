@@ -99,7 +99,6 @@ export function VenmoChargeDialog({ charge, open, onOpenChange }: Props) {
                 placeholder="Enter payment description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="text-sm"
               />
             </div>
           </div>

@@ -34,9 +34,6 @@ export function MobileNavBar() {
                     isActive
                       ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
                       : 'text-gray-600 hover:bg-gray-100 active:scale-95'
-                    //   isActive
-                    // ? 'text-indigo-600'
-                    // : 'text-gray-500 hover:text-indigo-400'
                   }
                 `}
               >
