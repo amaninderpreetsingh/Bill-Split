@@ -96,7 +96,7 @@ export function ItemFormFields({
           value={itemName}
           onChange={(e) => onNameChange(e.target.value)}
           onKeyPress={(e) => handleKeyPress(e, !!canSubmit)}
-          className="text-sm md:text-base"
+          className="text-base md:text-sm"
           autoFocus={mode === 'add'}
         />
       </div>
@@ -114,7 +114,7 @@ export function ItemFormFields({
             value={itemPrice}
             onChange={(e) => onPriceChange(e.target.value)}
             onKeyPress={(e) => handleKeyPress(e, !!canSubmit)}
-            className="text-sm md:text-base text-right pl-8"
+            className="text-base md:text-sm text-right pl-8"
             step="0.01"
             min="0"
           />

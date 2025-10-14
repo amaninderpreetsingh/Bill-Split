@@ -10,6 +10,7 @@ import { UI_TEXT, SUCCESS_MESSAGES } from '@/utils/uiConstants';
 export function ProfileSettingsCard() {
   const {
     user,
+    signOut,
     profile,
     venmoId,
     isEditing,
@@ -20,6 +21,7 @@ export function ProfileSettingsCard() {
     startEditing,
   } = useProfileEditor();
   const { toast } = useToast();
+  
 
   const handleSave = async () => {
     await save();
@@ -43,7 +45,7 @@ export function ProfileSettingsCard() {
             id="name"
             value={profile?.displayName || user?.displayName || ''}
             disabled
-            className="bg-muted text-sm md:text-base"
+            className="bg-muted text-base md:text-sm"
           />
         </div>
 
@@ -53,7 +55,7 @@ export function ProfileSettingsCard() {
             id="email"
             value={profile?.email || user?.email || ''}
             disabled
-            className="bg-muted text-sm md:text-base"
+            className="bg-muted text-base md:text-sm"
           />
         </div>
 
@@ -71,7 +73,7 @@ export function ProfileSettingsCard() {
               value={venmoId}
               onChange={(e) => setVenmoId(e.target.value)}
               disabled={!isEditing || saving}
-              className="text-sm md:text-base"
+              className="text-base md:text-sm"
             />
             {!isEditing && (
               <Button onClick={startEditing} variant="outline">
@@ -107,6 +109,15 @@ export function ProfileSettingsCard() {
             </Button>
           </div>
         )}
+        <div className="space-y-2">
+          <Button
+              onClick={signOut}
+              variant="outline"
+              className="flex-1 text-destructive"
+            > 
+              {UI_TEXT.SIGN_OUT}
+            </Button>
+        </div>
       </div>
     </Card>
   );

@@ -63,14 +63,14 @@ export function ManageFriendsCard() {
             value={newFriendName}
             onChange={(e) => setNewFriendName(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddFriend()}
-            className="flex-1 text-sm md:text-base"
+            className="flex-1 text-base md:text-sm"
           />
           <Input
             placeholder="Venmo ID (optional)"
             value={newFriendVenmoId}
             onChange={(e) => setNewFriendVenmoId(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddFriend()}
-            className="flex-1 text-sm md:text-base"
+            className="flex-1 text-base md:text-sm"
           />
           <Button onClick={handleAddFriend} className="gap-2">
             <UserPlus className="w-4 h-4" />
@@ -98,13 +98,13 @@ export function ManageFriendsCard() {
                       placeholder="Name"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      className="flex-1 text-sm md:text-base"
+                      className="flex-1 text-base md:text-sm"
                     />
                     <Input
                       placeholder="Venmo ID"
                       value={editingVenmoId}
                       onChange={(e) => setEditingVenmoId(e.target.value)}
-                      className="flex-1 text-sm md:text-base"
+                      className="flex-1 text-base md:text-sm"
                     />
                   </div>
                   <div className="flex gap-1">

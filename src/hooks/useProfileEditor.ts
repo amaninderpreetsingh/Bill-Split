@@ -3,7 +3,7 @@ import { useUserProfile } from './useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function useProfileEditor() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { profile, loading, updateVenmoId } = useUserProfile();
   const [venmoId, setVenmoId] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -34,6 +34,7 @@ export function useProfileEditor() {
   return {
     // Data
     user,
+    signOut,
     profile,
     loading,
     venmoId,

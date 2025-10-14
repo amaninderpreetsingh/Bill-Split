@@ -24,39 +24,31 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  // Mark initial load as complete after first render and persist to sessionStorage
+  // Mark initial load as complete after first render
   useEffect(() => {
     if (!loading && initialLoad) {
-      console.log('[Auth Page] Initial load complete, setting initialLoad = false');
       setInitialLoad(false);
       sessionStorage.setItem('auth_initial_load_complete', 'true');
     }
   }, [loading, initialLoad]);
 
-  // Mark that user has interacted when they click sign in
+  // Handle sign-in
   const handleSignIn = async () => {
-    console.log('[Auth Page] User clicked sign-in, marking interaction');
     sessionStorage.setItem('auth_initial_load_complete', 'true');
     setInitialLoad(false);
     setIsSigningIn(true);
 
     try {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Sign-in timeout after 30 seconds')), 30000)
-      );
-      await Promise.race([signInWithGoogle(), timeoutPromise]);
+      await signInWithGoogle();
     } catch (error: any) {
-      console.error('[Auth Button] Sign-in error:', error);
+      console.error('[Auth] Sign-in error:', error);
     } finally {
       setIsSigningIn(false);
     }
   };
 
-  // Only show full-page spinner during initial auth state check, not during sign-in
-  console.log('[Auth Page] Render - loading:', loading, 'initialLoad:', initialLoad, 'showSpinner:', loading && initialLoad);
-
+  // Show loading spinner during initial auth state check
   if (loading && initialLoad) {
-    console.log('[Auth Page] Showing full-page spinner');
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

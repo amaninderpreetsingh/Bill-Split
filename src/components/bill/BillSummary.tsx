@@ -29,7 +29,7 @@ export function BillSummary({ billData, customTip, effectiveTip, onTipChange }: 
               placeholder={billData.tip.toFixed(2)}
               value={customTip}
               onChange={(e) => onTipChange(e.target.value)}
-              className="w-28 md:w-32 h-9 md:h-10 text-right text-sm md:text-base pl-6"
+              className="w-28 md:w-32 h-9 md:h-10 text-right text-base md:text-sm pl-6"
               step="0.01"
               min="0"
             />

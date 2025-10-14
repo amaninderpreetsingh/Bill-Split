@@ -1,6 +1,5 @@
-import React, { createContext, useContext, ReactNode, useEffect } from 'react';
-import { User, signInWithPopup, signInWithCredential, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { User, signInWithPopup, signInWithCredential, GoogleAuthProvider, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider } from '@/config/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
@@ -28,40 +27,62 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, loading] = useAuthState(auth);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Custom auth state implementation with timeout (replaces useAuthState hook)
+  useEffect(() => {
+    // Force loading to false after 3 seconds if Firebase doesn't respond
+    const timeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+      }
+    }, 3000);
+
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        clearTimeout(timeout);
+        setUser(currentUser);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('[AuthContext] Auth state error:', error);
+        clearTimeout(timeout);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      clearTimeout(timeout);
+      unsubscribe();
+    };
+  }, []);
 
   const signInWithGoogle = async () => {
     try {
       const isNative = Capacitor.isNativePlatform();
-      console.log('[Auth] Sign in started, isNative:', isNative);
 
       if (isNative) {
-        // Use native Capacitor plugin for mobile apps
-        console.log('[Auth] Calling FirebaseAuthentication.signInWithGoogle()');
+        // Native sign-in for mobile apps
         const result = await FirebaseAuthentication.signInWithGoogle();
-        console.log('[Auth] Native sign-in result:', JSON.stringify(result, null, 2));
 
         if (!result.credential?.idToken) {
           throw new Error('No ID token received from Google Sign-In');
         }
 
-        // Create Firebase credential from the result
-        console.log('[Auth] Creating Google credential');
+        // Sync native sign-in with Firebase JS SDK
         const credential = GoogleAuthProvider.credential(result.credential.idToken);
-
-        // Sign in to Firebase with the credential
-        console.log('[Auth] Signing in to Firebase with credential');
         await signInWithCredential(auth, credential);
 
-        console.log('[Auth] Sign in successful!');
         toast({
           title: 'Welcome!',
           description: 'Successfully signed in with Google.',
         });
       } else {
-        // Use popup for web
-        console.log('[Auth] Using popup sign-in for web');
+        // Web sign-in using popup
         await signInWithPopup(auth, googleProvider);
         toast({
           title: 'Welcome!',
@@ -69,17 +90,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       }
     } catch (error: any) {
-      console.error('[Auth] Error signing in with Google:', {
-        message: error.message,
-        code: error.code,
-        fullError: error
-      });
+      console.error('[Auth] Sign-in error:', error);
 
       // Handle user cancellation gracefully
-      if (error.code === 'auth/cancelled-popup-request' ||
-          error.code === 'auth/popup-closed-by-user' ||
-          error.message?.includes('cancel')) {
-        console.log('[Auth] User cancelled sign-in');
+      if (
+        error.code === 'auth/cancelled-popup-request' ||
+        error.code === 'auth/popup-closed-by-user' ||
+        error.message?.includes('cancel')
+      ) {
         return; // Don't show error toast for cancellation
       }
 

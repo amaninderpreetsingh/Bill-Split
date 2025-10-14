@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
 import { getFirestore } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,8 +16,13 @@ const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication
-export const auth = getAuth(app);
+// Initialize Firebase Authentication with proper persistence for Capacitor
+// On native platforms, use indexedDB persistence to sync with native auth
+export const auth = Capacitor.isNativePlatform()
+  ? initializeAuth(app, {
+      persistence: indexedDBLocalPersistence,
+    })
+  : getAuth(app);
 
 // Initialize Firestore
 export const db = getFirestore(app);

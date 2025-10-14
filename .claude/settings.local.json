@@ -18,7 +18,8 @@
       "Bash(pod install)",
       "Read(//Applications/**)",
       "Bash(open /Users/simran/Documents/GitHub/Bill-Split/ios/App/App.xcworkspace)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
