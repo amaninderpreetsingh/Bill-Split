@@ -77,7 +77,6 @@ export default function AIScanView() {
         </TabsList>
 
         <TabsContent value="ai-scan" className="space-y-6">
-
           <ReceiptUploader
             selectedFile={upload.selectedFile}
             imagePreview={upload.imagePreview}
@@ -164,7 +163,10 @@ export default function AIScanView() {
                   billData={bill.billData}
                   customTip={bill.customTip}
                   effectiveTip={bill.effectiveTip}
+                  customTax={bill.customTax}
+                  effectiveTax={bill.effectiveTax}
                   onTipChange={bill.setCustomTip}
+                  onTaxChange={bill.setCustomTax}
                 />
               </Card>
 
@@ -250,7 +252,10 @@ export default function AIScanView() {
                   billData={bill.billData}
                   customTip={bill.customTip}
                   effectiveTip={bill.effectiveTip}
+                  customTax={bill.customTax}
+                  effectiveTax={bill.effectiveTax}
                   onTipChange={bill.setCustomTip}
+                  onTaxChange={bill.setCustomTax}
                 />
               )}
             </Card>

@@ -37,7 +37,7 @@ export default function GroupEventView() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-12">
+      <div className="text-center flex items-center justify-between mb-12">
         <div className="space-y-2">
           <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
             Groups & Events

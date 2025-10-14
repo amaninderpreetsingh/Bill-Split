@@ -4,7 +4,8 @@ export function calculatePersonTotals(
   billData: BillData | null,
   people: Person[],
   itemAssignments: ItemAssignment,
-  effectiveTip: number
+  effectiveTip: number,
+  effectiveTax: number
 ): PersonTotal[] {
   if (!billData || people.length === 0) return [];
 
@@ -30,7 +31,7 @@ export function calculatePersonTotals(
   const results: PersonTotal[] = people.map(person => {
     const personSubtotal = personSubtotals[person.id];
     const proportion = totalAssignedSubtotal > 0 ? personSubtotal / totalAssignedSubtotal : 0;
-    const personTax = billData.tax * proportion;
+    const personTax = effectiveTax * proportion;
     const personTip = effectiveTip * proportion;
     const personTotal = personSubtotal + personTax + personTip;
 

@@ -228,7 +228,10 @@ export default function GroupDetailView() {
                   billData={bill.billData}
                   customTip={bill.customTip}
                   effectiveTip={bill.effectiveTip}
+                  customTax={bill.customTax}
+                  effectiveTax={bill.effectiveTax}
                   onTipChange={bill.setCustomTip}
+                  onTaxChange={bill.setCustomTax}
                 />
               </Card>
 
@@ -325,7 +328,10 @@ export default function GroupDetailView() {
                   billData={bill.billData}
                   customTip={bill.customTip}
                   effectiveTip={bill.effectiveTip}
+                  customTax={bill.customTax}
+                  effectiveTax={bill.effectiveTax}
                   onTipChange={bill.setCustomTip}
+                  onTaxChange={bill.setCustomTax}
                 />
               )}
             </Card>

@@ -8,6 +8,7 @@ export function useBillSplitter(people: Person[]) {
   const [itemAssignments, setItemAssignments] = useState<ItemAssignment>({});
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>('checkboxes');
   const [customTip, setCustomTip] = useState('');
+  const [customTax, setCustomTax] = useState('');
   const [splitEvenly, setSplitEvenly] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -20,14 +21,22 @@ export function useBillSplitter(people: Person[]) {
     return billData?.tip || 0;
   }, [customTip, billData]);
 
+  const effectiveTax = useMemo(() => {
+    const customTaxValue = parseFloat(customTax);
+    if (!isNaN(customTaxValue) && customTaxValue >= 0) {
+      return customTaxValue;
+    }
+    return billData?.tax || 0;
+  }, [customTax, billData]);
+
   const allItemsAssigned = useMemo(() => {
     return areAllItemsAssigned(billData, itemAssignments);
   }, [billData, itemAssignments]);
 
   const personTotals = useMemo((): PersonTotal[] => {
     if (!allItemsAssigned) return [];
-    return calculatePersonTotals(billData, people, itemAssignments, effectiveTip);
-  }, [billData, people, itemAssignments, allItemsAssigned, effectiveTip]);
+    return calculatePersonTotals(billData, people, itemAssignments, effectiveTip, effectiveTax);
+  }, [billData, people, itemAssignments, allItemsAssigned, effectiveTip, effectiveTax]);
 
   const handleItemAssignment = (itemId: string, personId: string, checked: boolean) => {
     const currentAssignments = itemAssignments[itemId] || [];
@@ -98,6 +107,7 @@ export function useBillSplitter(people: Person[]) {
     setBillData(null);
     setItemAssignments({});
     setCustomTip('');
+    setCustomTax('');
     setSplitEvenly(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -117,6 +127,9 @@ export function useBillSplitter(people: Person[]) {
     customTip,
     setCustomTip,
     effectiveTip,
+    customTax,
+    setCustomTax,
+    effectiveTax,
     allItemsAssigned,
     personTotals,
     handleItemAssignment,

@@ -96,21 +96,17 @@ export function BillItemsTable({
           <TableBody>
             {isAdding && (
               <TableRow className="bg-primary/5">
-                <TableCell>
-                  <ItemFormFields
-                    mode="add"
-                    itemName={newItemName}
-                    itemPrice={newItemPrice}
-                    onNameChange={setNewItemName}
-                    onPriceChange={setNewItemPrice}
-                    onSave={onAddItem}
-                    onCancel={onCancelAdding}
-                    layout="table"
-                  />
-                </TableCell>
-                <TableCell className="text-right"></TableCell>
+                <ItemFormFields
+                  mode="add"
+                  itemName={newItemName}
+                  itemPrice={newItemPrice}
+                  onNameChange={setNewItemName}
+                  onPriceChange={setNewItemPrice}
+                  onSave={onAddItem}
+                  onCancel={onCancelAdding}
+                  layout="table"
+                />
                 {people.length > 0 && <TableCell></TableCell>}
-                <TableCell></TableCell>
               </TableRow>
             )}
 
@@ -133,26 +129,30 @@ export function BillItemsTable({
                   }`}
                 >
                   {editingItemId === item.id ? (
-                    <>
-                      <TableCell colSpan={2}>
-                        <div className="flex items-center gap-2">
-                          <ItemFormFields
-                            mode="edit"
-                            itemName={editingItemName}
-                            itemPrice={editingItemPrice}
-                            onNameChange={setEditingName}
-                            onPriceChange={setEditingPrice}
-                            onSave={onSave}
-                            onCancel={onCancel}
-                            layout="table"
-                          />
-                        </div>
-                      </TableCell>
-                    </>
+                    <ItemFormFields
+                      mode="edit"
+                      itemName={editingItemName}
+                      itemPrice={editingItemPrice}
+                      onNameChange={setEditingName}
+                      onPriceChange={setEditingPrice}
+                      onSave={onSave}
+                      onCancel={onCancel}
+                      layout="table"
+                    />
                   ) : (
                     <>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => onEdit(item.id, item.name, item.price)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => onDelete(item.id)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </>
                   )}
                   {people.length > 0 && (
@@ -176,18 +176,6 @@ export function BillItemsTable({
                       )}
                     </TableCell>
                   )}
-                  <TableCell>
-                    {editingItemId !== item.id && (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => onEdit(item.id, item.name, item.price)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => onDelete(item.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
                 </TableRow>
               );
             })

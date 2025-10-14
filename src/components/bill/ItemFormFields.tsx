@@ -1,6 +1,7 @@
 import { Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TableCell } from '@/components/ui/table';
 import { FORM_LABELS, UI_TEXT } from '@/utils/uiConstants';
 
 interface ItemFormFieldsProps {
@@ -40,46 +41,53 @@ export function ItemFormFields({
   if (layout === 'table') {
     return (
       <>
-        <Input
-          placeholder={FORM_LABELS.ENTER_ITEM_NAME}
-          value={itemName}
-          onChange={(e) => onNameChange(e.target.value)}
-          onKeyPress={(e) => handleKeyPress(e, !!canSubmit)}
-          className="h-8"
-          autoFocus={mode === 'add'}
-        />
-        <div className="relative ml-auto w-24">
-          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-            $
-          </span>
+        <TableCell>
           <Input
-            type="number"
-            placeholder={FORM_LABELS.PRICE_PLACEHOLDER}
-            value={itemPrice}
-            onChange={(e) => onPriceChange(e.target.value)}
+            placeholder={FORM_LABELS.ENTER_ITEM_NAME}
+            value={itemName}
+            onChange={(e) => onNameChange(e.target.value)}
             onKeyPress={(e) => handleKeyPress(e, !!canSubmit)}
-            className="h-8 text-right pl-5"
-            step="0.01"
-            min="0"
+            className="h-8"
+            autoFocus={mode === 'add'}
           />
-        </div>
-        <div className="flex gap-1">
-          <Button
-            size="sm"
-            className={mode === 'add' ? 'bg-green-600 hover:bg-green-700' : ''}
-            variant={mode === 'edit' ? 'ghost' : 'default'}
-            onClick={onSave}
-          >
-            <Check className={`w-4 h-4 ${mode === 'edit' ? 'text-green-600' : ''}`} />
-          </Button>
-          <Button
-            size="sm"
-            variant={mode === 'edit' ? 'ghost' : 'outline'}
-            onClick={onCancel}
-          >
-            <X className={`w-4 h-4 ${mode === 'edit' ? 'text-muted-foreground' : ''}`} />
-          </Button>
-        </div>
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="relative ml-auto w-24">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+              $
+            </span>
+            <Input
+              type="number"
+              inputMode="decimal"
+              placeholder={FORM_LABELS.PRICE_PLACEHOLDER}
+              value={itemPrice}
+              onChange={(e) => onPriceChange(e.target.value)}
+              onKeyPress={(e) => handleKeyPress(e, !!canSubmit)}
+              className="h-8 text-right pl-5"
+              step="0.01"
+              min="0"
+            />
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className={mode === 'add' ? 'bg-green-600 hover:bg-green-700' : ''}
+              variant={mode === 'edit' ? 'ghost' : 'default'}
+              onClick={onSave}
+            >
+              <Check className={`w-4 h-4 ${mode === 'edit' ? 'text-green-600' : ''}`} />
+            </Button>
+            <Button
+              size="sm"
+              variant={mode === 'edit' ? 'ghost' : 'outline'}
+              onClick={onCancel}
+            >
+              <X className={`w-4 h-4 ${mode === 'edit' ? 'text-muted-foreground' : ''}`} />
+            </Button>
+          </div>
+        </TableCell>
       </>
     );
   }
@@ -110,6 +118,7 @@ export function ItemFormFields({
           </span>
           <Input
             type="number"
+            inputMode="decimal"
             placeholder={FORM_LABELS.PRICE_PLACEHOLDER}
             value={itemPrice}
             onChange={(e) => onPriceChange(e.target.value)}
