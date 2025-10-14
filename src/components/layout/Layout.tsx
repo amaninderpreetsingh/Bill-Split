@@ -6,14 +6,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 export function Layout() {
   const isMobile = useIsMobile();
 
-  const mainPaddingBottom = isMobile ? 'pb-20' : 'pb-12';
+  const mainPaddingBottom = isMobile ? 'pb-16' : 'pb-12';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 flex flex-col">
       {/* Render Header only if not mobile */}
       {!isMobile && <Header />}
 
-      <main className={`container mx-auto px-4 py-12 flex-grow ${mainPaddingBottom}`}>
+      <main className={`container mx-auto px-4 py-4 md:py-12 flex-grow ${mainPaddingBottom}`}>
         <div className="max-w-4xl mx-auto">
           <Outlet />
         </div>

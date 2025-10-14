@@ -15,7 +15,9 @@
       "Bash(wc:*)",
       "Bash(npx cap add:*)",
       "Bash(npx cap:*)",
-      "Bash(pod install)"
+      "Bash(pod install)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
