@@ -8,6 +8,7 @@ interface Props {
   selectedFile: File | null;
   imagePreview: string | null;
   isDragging: boolean;
+  isUploading: boolean;
   isAnalyzing: boolean;
   isMobile?: boolean;
   onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -24,6 +25,7 @@ export function ReceiptUploader({
   selectedFile,
   imagePreview,
   isDragging,
+  isUploading,
   isAnalyzing,
   isMobile = false,
   onFileInput,
@@ -127,9 +129,14 @@ export function ReceiptUploader({
             size="lg"
             className="w-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
             onClick={onAnalyze}
-            disabled={isAnalyzing}
+            disabled={isUploading || isAnalyzing}
           >
-            {isAnalyzing ? (
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Uploading Receipt...
+              </>
+            ) : isAnalyzing ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Analyzing Receipt...

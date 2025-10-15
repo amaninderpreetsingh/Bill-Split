@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HeroSection } from '@/components/layout/HeroSection';
 import { ReceiptUploader } from '@/components/receipt/ReceiptUploader';
 import { PeopleManager } from '@/components/people/PeopleManager';
@@ -15,52 +15,208 @@ import { useItemEditor } from '@/hooks/useItemEditor';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Receipt, Users, Upload, Edit } from 'lucide-react';
+import { Receipt, Users, Upload, Edit, Loader2 } from 'lucide-react';
+import { useBillSession } from '@/contexts/BillSessionContext';
 import { UI_TEXT } from '@/utils/uiConstants';
+import { useSessionTimeout } from '@/hooks/useSessionTimeout';
+import { Person, BillData, ItemAssignment, AssignmentMode } from '@/types';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function AIScanView() {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('ai-scan');
+  const isInitializing = useRef(true);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const people = usePeopleManager();
-  const bill = useBillSplitter(people.people);
+  // Centralized state management
+  const {
+    activeSession,
+    isLoadingSessions,
+    isUploading,
+    saveSession,
+    archiveAndStartNewSession,
+    uploadReceiptImage,
+    resumeSession,
+  } = useBillSession();
+
+  const [people, setPeople] = useState<Person[]>([]);
+  const [billData, setBillData] = useState<BillData | null>(null);
+  const [itemAssignments, setItemAssignments] = useState<ItemAssignment>({});
+  const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>('checkboxes');
+  const [customTip, setCustomTip] = useState<string>('');
+  const [customTax, setCustomTax] = useState<string>('');
+  const [splitEvenly, setSplitEvenly] = useState<boolean>(false);
+
+  const peopleManager = usePeopleManager(people, setPeople);
+  const bill = useBillSplitter({
+    people,
+    billData,
+    setBillData,
+    itemAssignments,
+    setItemAssignments,
+    assignmentMode,
+    setAssignmentMode,
+    customTip,
+    setCustomTip,
+    customTax,
+    setCustomTax,
+    splitEvenly,
+    setSplitEvenly,
+  });
+
   const upload = useFileUpload();
-  const analyzer = useReceiptAnalyzer(bill.setBillData, people.setPeople, bill.billData);
+  const analyzer = useReceiptAnalyzer(setBillData, setPeople, billData);
   const editor = useItemEditor(
-    bill.billData,
-    bill.setBillData,
-    bill.customTip,
+    billData,
+    setBillData,
+    customTip,
     bill.removeItemAssignments
   );
 
+  // Load session data from Firebase into local state
+  useEffect(() => {
+    isInitializing.current = true;
+    if (activeSession) {
+      setBillData(activeSession.billData || null);
+      setItemAssignments(activeSession.itemAssignments || {});
+      setPeople(activeSession.people || []);
+      setCustomTip(activeSession.customTip || '');
+      setCustomTax(activeSession.customTax || '');
+      setAssignmentMode(activeSession.assignmentMode || 'checkboxes');
+      setSplitEvenly(activeSession.splitEvenly || false);
+      if (activeSession.receiptImageUrl) {
+        upload.setImagePreview(activeSession.receiptImageUrl);
+        upload.setSelectedFile(new File([], activeSession.receiptFileName || 'receipt.jpg'));
+      } else {
+        upload.handleRemoveImage();
+      }
+    } else {
+      // If no session, reset to initial state
+      setBillData(null);
+      setItemAssignments({});
+      setPeople([]);
+      setCustomTip('');
+      setCustomTax('');
+      setAssignmentMode('checkboxes');
+      setSplitEvenly(false);
+      upload.handleRemoveImage();
+    }
+    // Allow saves after a short delay to let state updates settle
+    const timer = setTimeout(() => (isInitializing.current = false), 200);
+    return () => clearTimeout(timer);
+  }, [activeSession]);
+
+  // Effect to handle resuming a session from navigation state
+  useEffect(() => {
+    const { resumeSessionId } = location.state || {};
+    if (resumeSessionId) {
+      resumeSession(resumeSessionId);
+      // Clear location state to prevent re-triggering on refresh
+      navigate('.', { replace: true, state: {} });
+    }
+  }, [location, resumeSession, navigate]);
+
+  useSessionTimeout({
+    onTimeout: () => {
+      // Only archive if there is data to save
+      if (billData || people.length > 0) {
+        archiveAndStartNewSession();
+      }
+    },
+    timeoutMinutes: 20,
+  });
+
+  // Save local state to Firebase session
+  useEffect(() => {
+    // Avoid saving during initial load or if there's no data to save
+    if (isInitializing.current || isLoadingSessions || (!billData && people.length === 0)) {
+      return;
+    }
+
+    const debouncedSave = setTimeout(() => {
+      saveSession({
+        billData,
+        itemAssignments,
+        people,
+        customTip,
+        customTax,
+        assignmentMode,
+        splitEvenly,
+      });
+    }, 1000); // Debounce to avoid rapid writes
+
+    return () => clearTimeout(debouncedSave);
+  }, [
+    billData,
+    itemAssignments,
+    people,
+    customTip,
+    customTax,
+    assignmentMode,
+    splitEvenly,
+    saveSession,
+    isLoadingSessions,
+  ]);
+
   const handleRemovePerson = (personId: string) => {
-    people.removePerson(personId);
+    peopleManager.removePerson(personId);
     bill.removePersonFromAssignments(personId);
   };
 
+  const handleRemoveImage = () => {
+    // Clear local UI state immediately
+    upload.handleRemoveImage();
+    // Persist the removal to Firebase
+    saveSession({
+      receiptImageUrl: null,
+      receiptFileName: null,
+    });
+  };
+
   const handleStartOver = () => {
-    bill.reset();
-    people.setPeople([]);
-    if (activeTab === 'ai-scan') {
-      upload.handleRemoveImage();
-    }
+    archiveAndStartNewSession();
   };
 
   const handleAnalyzeReceipt = async () => {
-    if (!upload.imagePreview) return;
-    await analyzer.analyzeReceipt(upload.imagePreview);
+    if (!upload.imagePreview || !upload.selectedFile) {
+      // TODO: Add toast notification for user
+      console.error("Cannot analyze: image preview or file is missing.");
+      return;
+    }
+
+    // Kick off analysis and upload in parallel
+    const analysisPromise = analyzer.analyzeReceipt(upload.imagePreview);
+    const uploadPromise = uploadReceiptImage(upload.selectedFile);
+
+    await Promise.all([analysisPromise, uploadPromise]);
   };
 
-  const handleImageSelected = (base64Image: string) => {
-    // For camera images, we don't have a File object, just set the preview
-    upload.setImagePreview(base64Image);
-    upload.setSelectedFile(null);
+  const handleImageSelected = (fileOrBase64: File | string) => {
+    if (typeof fileOrBase64 === 'string') {
+      // From mobile camera (base64 string)
+      upload.setImagePreview(fileOrBase64);
+      // Convert base64 to file for upload
+      const file = new File([fileOrBase64], 'receipt.jpg', { type: 'image/jpeg' });
+      upload.setSelectedFile(file);
+    } else {
+      // From web file input (File object)
+      upload.handleFileSelect(fileOrBase64);
+    }
   };
+
+  if (isLoadingSessions) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>
       <HeroSection
-        hasBillData={!!bill.billData}
+        hasBillData={!!billData}
         onLoadMock={analyzer.loadMockData}
         onStartOver={handleStartOver}
       />
@@ -82,34 +238,39 @@ export default function AIScanView() {
             selectedFile={upload.selectedFile}
             imagePreview={upload.imagePreview}
             isDragging={upload.isDragging}
+            isUploading={isUploading}
             isAnalyzing={analyzer.isAnalyzing}
             isMobile={isMobile}
-            onFileInput={upload.handleFileInput}
+            onFileInput={(e) => e.target.files && handleImageSelected(e.target.files[0])}
             onDragOver={upload.handleDragOver}
             onDragLeave={upload.handleDragLeave}
-            onDrop={upload.handleDrop}
-            onRemove={upload.handleRemoveImage}
+            onDrop={(e) => {
+              upload.handleDrop(e);
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleImageSelected(file);
+            }}
+            onRemove={handleRemoveImage}
             onAnalyze={handleAnalyzeReceipt}
             onImageSelected={handleImageSelected}
             fileInputRef={upload.fileInputRef}
           />
 
-          {bill.billData && (
+          {billData && (
             <div className="space-y-6">
               <PeopleManager
-                people={people.people}
-                newPersonName={people.newPersonName}
-                newPersonVenmoId={people.newPersonVenmoId}
-                useNameAsVenmoId={people.useNameAsVenmoId}
-                saveToFriendsList={people.saveToFriendsList}
-                onNameChange={people.setNewPersonName}
-                onVenmoIdChange={people.setNewPersonVenmoId}
-                onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
-                onSaveToFriendsListChange={people.setSaveToFriendsList}
-                onAdd={people.addPerson}
-                onAddFromFriend={people.addFromFriend}
+                people={people}
+                newPersonName={peopleManager.newPersonName}
+                newPersonVenmoId={peopleManager.newPersonVenmoId}
+                useNameAsVenmoId={peopleManager.useNameAsVenmoId}
+                saveToFriendsList={peopleManager.saveToFriendsList}
+                onNameChange={peopleManager.setNewPersonName}
+                onVenmoIdChange={peopleManager.setNewPersonVenmoId}
+                onUseNameAsVenmoIdChange={peopleManager.setUseNameAsVenmoId}
+                onSaveToFriendsListChange={peopleManager.setSaveToFriendsList}
+                onAdd={peopleManager.addPerson}
+                onAddFromFriend={peopleManager.addFromFriend}
                 onRemove={handleRemovePerson}
-          setPeople={people.setPeople}
+                setPeople={setPeople}
               />
 
               <Card className="p-4 md:p-6">
@@ -119,19 +280,19 @@ export default function AIScanView() {
                     <h3 className="text-xl font-semibold">{UI_TEXT.BILL_ITEMS}</h3>
                   </div>
 
-                  {people.people.length > 0 && !isMobile && (
+                  {people.length > 0 && !isMobile && (
                     <AssignmentModeToggle
-                      mode={bill.assignmentMode}
-                      onModeChange={bill.setAssignmentMode}
+                      mode={assignmentMode}
+                      onModeChange={setAssignmentMode}
                     />
                   )}
                 </div>
 
                 <BillItems
-                  billData={bill.billData}
-                  people={people.people}
-                  itemAssignments={bill.itemAssignments}
-                  assignmentMode={bill.assignmentMode}
+                  billData={billData}
+                  people={people}
+                  itemAssignments={itemAssignments}
+                  assignmentMode={assignmentMode}
                   editingItemId={editor.editingItemId}
                   editingItemName={editor.editingItemName}
                   editingItemPrice={editor.editingItemPrice}
@@ -150,33 +311,33 @@ export default function AIScanView() {
                   onStartAdding={editor.startAdding}
                   onAddItem={editor.addItem}
                   onCancelAdding={editor.cancelAdding}
-                  splitEvenly={bill.splitEvenly}
+                  splitEvenly={splitEvenly}
                   onToggleSplitEvenly={bill.toggleSplitEvenly}
                 />
 
-                {people.people.length === 0 && !isMobile && bill.billData && (
+                {people.length === 0 && !isMobile && billData && (
                   <p className="text-sm text-muted-foreground text-center py-4 mt-4">
                     {UI_TEXT.ADD_PEOPLE_TO_ASSIGN}
                   </p>
                 )}
 
                 <BillSummary
-                  billData={bill.billData}
-                  customTip={bill.customTip}
+                  billData={billData}
+                  customTip={customTip}
                   effectiveTip={bill.effectiveTip}
-                  customTax={bill.customTax}
+                  customTax={customTax}
                   effectiveTax={bill.effectiveTax}
-                  onTipChange={bill.setCustomTip}
-                  onTaxChange={bill.setCustomTax}
+                  onTipChange={setCustomTip}
+                  onTaxChange={setCustomTax}
                 />
               </Card>
 
               <SplitSummary
                 personTotals={bill.personTotals}
                 allItemsAssigned={bill.allItemsAssigned}
-                people={people.people}
-                billData={bill.billData}
-                itemAssignments={bill.itemAssignments}
+                people={people}
+                billData={billData}
+                itemAssignments={itemAssignments}
               />
             </div>
           )}
@@ -185,19 +346,19 @@ export default function AIScanView() {
         <TabsContent value="manual" className="space-y-6">
           <div className="space-y-6">
             <PeopleManager
-              people={people.people}
-              newPersonName={people.newPersonName}
-              newPersonVenmoId={people.newPersonVenmoId}
-              useNameAsVenmoId={people.useNameAsVenmoId}
-              saveToFriendsList={people.saveToFriendsList}
-              onNameChange={people.setNewPersonName}
-              onVenmoIdChange={people.setNewPersonVenmoId}
-              onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
-              onSaveToFriendsListChange={people.setSaveToFriendsList}
-              onAdd={people.addPerson}
-              onAddFromFriend={people.addFromFriend}
+              people={people}
+              newPersonName={peopleManager.newPersonName}
+              newPersonVenmoId={peopleManager.newPersonVenmoId}
+              useNameAsVenmoId={peopleManager.useNameAsVenmoId}
+              saveToFriendsList={peopleManager.saveToFriendsList}
+              onNameChange={peopleManager.setNewPersonName}
+              onVenmoIdChange={peopleManager.setNewPersonVenmoId}
+              onUseNameAsVenmoIdChange={peopleManager.setUseNameAsVenmoId}
+              onSaveToFriendsListChange={peopleManager.setSaveToFriendsList}
+              onAdd={peopleManager.addPerson}
+              onAddFromFriend={peopleManager.addFromFriend}
               onRemove={handleRemovePerson}
-          setPeople={people.setPeople}
+              setPeople={setPeople}
             />
 
             <Card className="p-4 md:p-6">
@@ -207,19 +368,19 @@ export default function AIScanView() {
                   <h3 className="text-xl font-semibold">Bill Items</h3>
                 </div>
 
-                {people.people.length > 0 && !isMobile && (
+                {people.length > 0 && !isMobile && (
                   <AssignmentModeToggle
-                    mode={bill.assignmentMode}
-                    onModeChange={bill.setAssignmentMode}
+                    mode={assignmentMode}
+                    onModeChange={setAssignmentMode}
                   />
                 )}
               </div>
 
               <BillItems
-                billData={bill.billData}
-                people={people.people}
-                itemAssignments={bill.itemAssignments}
-                assignmentMode={bill.assignmentMode}
+                billData={billData}
+                people={people}
+                itemAssignments={itemAssignments}
+                assignmentMode={assignmentMode}
                 editingItemId={editor.editingItemId}
                 editingItemName={editor.editingItemName}
                 editingItemPrice={editor.editingItemPrice}
@@ -238,43 +399,43 @@ export default function AIScanView() {
                 onStartAdding={editor.startAdding}
                 onAddItem={editor.addItem}
                 onCancelAdding={editor.cancelAdding}
-                splitEvenly={bill.splitEvenly}
+                splitEvenly={splitEvenly}
                 onToggleSplitEvenly={bill.toggleSplitEvenly}
               />
 
-              {people.people.length === 0 && !isMobile && bill.billData && (
+              {people.length === 0 && !isMobile && billData && (
                 <p className="text-sm text-muted-foreground text-center py-4 mt-4">
                   Add people above to assign items
                 </p>
               )}
 
-              {bill.billData && (
+              {billData && (
                 <BillSummary
-                  billData={bill.billData}
-                  customTip={bill.customTip}
+                  billData={billData}
+                  customTip={customTip}
                   effectiveTip={bill.effectiveTip}
-                  customTax={bill.customTax}
+                  customTax={customTax}
                   effectiveTax={bill.effectiveTax}
-                  onTipChange={bill.setCustomTip}
-                  onTaxChange={bill.setCustomTax}
+                  onTipChange={setCustomTip}
+                  onTaxChange={setCustomTax}
                 />
               )}
             </Card>
 
-            {bill.billData && (
+            {billData && (
               <SplitSummary
                 personTotals={bill.personTotals}
                 allItemsAssigned={bill.allItemsAssigned}
-                people={people.people}
-                billData={bill.billData}
-                itemAssignments={bill.itemAssignments}
+                people={people}
+                billData={billData}
+                itemAssignments={itemAssignments}
               />
             )}
           </div>
         </TabsContent>
       </Tabs>
 
-      {!bill.billData && <FeatureCards />}
+      {!billData && <FeatureCards />}
     </>
   );
 }

@@ -74,6 +74,7 @@ export function useFileUpload() {
     handleDragLeave,
     handleDrop,
     handleRemoveImage,
+    handleFileSelect, // Expose handleFileSelect
     setSelectedFile,
     setImagePreview,
   };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, Users, UsersRound } from 'lucide-react';
+import { Settings, Users, UsersRound, History } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ProfileSettingsCard } from '@/components/profile/ProfileSettingsCard';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { SessionList } from '@/components/sessions/SessionList';
 import { LogIn } from 'lucide-react';
 
 export default function SettingsView() {
@@ -66,6 +67,7 @@ export default function SettingsView() {
           <ProfileSettingsCard />
           <ManageFriendsCard />
           <ManageSquadsCard />
+          <SessionList />
         </div>
       </div>
     );
@@ -84,7 +86,7 @@ export default function SettingsView() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile" className="gap-1 text-xs">
             <Settings className="w-3 h-3" />
             <span>Profile</span>
@@ -96,6 +98,10 @@ export default function SettingsView() {
           <TabsTrigger value="squads" className="gap-1 text-xs">
             <UsersRound className="w-3 h-3" />
             <span>Squads</span>
+          </TabsTrigger>
+          <TabsTrigger value="sessions" className="gap-1 text-xs">
+            <History className="w-3 h-3" />
+            <span>Sessions</span>
           </TabsTrigger>
         </TabsList>
 
@@ -109,6 +115,10 @@ export default function SettingsView() {
 
         <TabsContent value="squads" className="mt-4">
           <ManageSquadsCard />
+        </TabsContent>
+
+        <TabsContent value="sessions" className="mt-4">
+          <SessionList />
         </TabsContent>
       </Tabs>
     </div>

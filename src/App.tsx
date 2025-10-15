@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { BillSessionProvider } from "@/contexts/BillSessionContext";
 import { Layout } from "@/components/layout/Layout";
 import AIScanView from "./pages/AIScanView";
 import GroupEventView from "./pages/GroupEventView";
@@ -17,7 +18,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
+      <BillSessionProvider>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -34,6 +36,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+    </BillSessionProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

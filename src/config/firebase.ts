@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
 
 const firebaseConfig = {
@@ -26,6 +27,9 @@ export const auth = Capacitor.isNativePlatform()
 
 // Initialize Firestore
 export const db = getFirestore(app);
+
+// Initialize Storage
+export const storage = getStorage(app);
 
 // Initialize Analytics (optional)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;

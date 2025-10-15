@@ -14,8 +14,10 @@ import { useSessionStorage } from './useSessionStorage';
  * @returns People state and management handlers
  */
 
-export function usePeopleManager() {
-  const [people, setPeople] = useSessionStorage<Person[]>('billsplit_people', []);
+export function usePeopleManager(
+  people: Person[],
+  setPeople: React.Dispatch<React.SetStateAction<Person[]>>
+) {
   const [newPersonName, setNewPersonName] = useState('');
   const [newPersonVenmoId, setNewPersonVenmoId] = useState('');
   const [useNameAsVenmoId, setUseNameAsVenmoId] = useState(false);

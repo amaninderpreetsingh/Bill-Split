@@ -1,16 +1,39 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { BillData, ItemAssignment, AssignmentMode, PersonTotal, Person } from '@/types';
 import { calculatePersonTotals, areAllItemsAssigned } from '@/utils/calculations';
 import { useToast } from './use-toast';
-import { useSessionStorage, clearBillSplitSessionStorage } from './useSessionStorage';
 
-export function useBillSplitter(people: Person[]) {
-  const [billData, setBillData] = useSessionStorage<BillData | null>('billsplit_billData', null);
-  const [itemAssignments, setItemAssignments] = useSessionStorage<ItemAssignment>('billsplit_itemAssignments', {});
-  const [assignmentMode, setAssignmentMode] = useSessionStorage<AssignmentMode>('billsplit_assignmentMode', 'checkboxes');
-  const [customTip, setCustomTip] = useSessionStorage<string>('billsplit_customTip', '');
-  const [customTax, setCustomTax] = useSessionStorage<string>('billsplit_customTax', '');
-  const [splitEvenly, setSplitEvenly] = useSessionStorage<boolean>('billsplit_splitEvenly', false);
+interface BillSplitterProps {
+  people: Person[];
+  billData: BillData | null;
+  setBillData: (billData: BillData | null) => void;
+  itemAssignments: ItemAssignment;
+  setItemAssignments: (assignments: ItemAssignment) => void;
+  assignmentMode: AssignmentMode;
+  setAssignmentMode: (mode: AssignmentMode) => void;
+  customTip: string;
+  setCustomTip: (tip: string) => void;
+  customTax: string;
+  setCustomTax: (tax: string) => void;
+  splitEvenly: boolean;
+  setSplitEvenly: (split: boolean) => void;
+}
+
+export function useBillSplitter({
+  people,
+  billData,
+  setBillData,
+  itemAssignments,
+  setItemAssignments,
+  assignmentMode,
+  setAssignmentMode,
+  customTip,
+  setCustomTip,
+  customTax,
+  setCustomTax,
+  splitEvenly,
+  setSplitEvenly,
+}: BillSplitterProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -104,25 +127,7 @@ export function useBillSplitter(people: Person[]) {
     }
   }, [splitEvenly, billData?.items.length, people.length]);
 
-  const reset = () => {
-    setBillData(null);
-    setItemAssignments({});
-    setCustomTip('');
-    setCustomTax('');
-    setSplitEvenly(false);
-    setAssignmentMode('checkboxes');
-
-    // Clear sessionStorage
-    clearBillSplitSessionStorage();
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    toast({
-      title: 'Reset complete',
-      description: 'Starting fresh!',
-    });
-  };
+  
 
   return {
     billData,
@@ -143,7 +148,6 @@ export function useBillSplitter(people: Person[]) {
     removeItemAssignments,
     splitEvenly,
     toggleSplitEvenly,
-    reset,
     fileInputRef,
   };
 }
