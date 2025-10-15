@@ -46,13 +46,6 @@ export function ManageSquadsDialog({ open, onOpenChange }: ManageSquadsDialogPro
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="list">Your Squads</TabsTrigger>
-            <TabsTrigger value={activeTab === 'edit' ? 'edit' : 'create'}>
-              {activeTab === 'edit' ? 'Edit Squad' : 'Create New'}
-            </TabsTrigger>
-          </TabsList>
-
           <TabsContent value="list" className="space-y-4 py-4">
             {loading ? (
               <div className="text-center py-8">
@@ -60,15 +53,15 @@ export function ManageSquadsDialog({ open, onOpenChange }: ManageSquadsDialogPro
               </div>
             ) : (
               <>
-                <SquadList squads={squads} onEdit={handleEdit} onDelete={handleDelete} />
                 <Button
                   onClick={() => setActiveTab('create')}
-                  className="w-full"
+                  className="w-full bg-primary hover:bg-primary/90"
                   variant="outline"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create New Squad
                 </Button>
+                <SquadList squads={squads} onEdit={handleEdit} onDelete={handleDelete} />
               </>
             )}
           </TabsContent>

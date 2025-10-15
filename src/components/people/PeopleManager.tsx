@@ -1,9 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, UserPlus, Trash2, UserCheck } from 'lucide-react';
+import { Users, UserPlus, Trash2, UserCheck, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Person } from '@/types';
 import { AddFromFriendsDialog } from './AddFromFriendsDialog';
 import { AddFromSquadDialog } from '@/components/squads/AddFromSquadDialog';
@@ -198,18 +205,38 @@ export function PeopleManager({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Badge
-            variant={useNameAsVenmoId ? "default" : "outline"}
-            className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity"
-            onClick={() => {
-              onUseNameAsVenmoIdChange(!useNameAsVenmoId);
-              if (!useNameAsVenmoId) {
-                setShowVenmoField(false);
-              }
-            }}
-          >
-            Use name as Venmo ID
-          </Badge>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Badge
+                variant="outline"
+                className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity flex items-center gap-1"
+              >
+                Add Venmo ID
+                <ChevronDown className="w-3 h-3" />
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuRadioGroup
+                value={useNameAsVenmoId ? "use-name" : "custom"}
+                onValueChange={(value) => {
+                  if (value === "use-name") {
+                    onUseNameAsVenmoIdChange(true);
+                    setShowVenmoField(false);
+                  } else {
+                    onUseNameAsVenmoIdChange(false);
+                    setShowVenmoField(true);
+                  }
+                }}
+              >
+                <DropdownMenuRadioItem value="use-name" className="cursor-pointer py-2.5">
+                  Use name as Venmo ID
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="custom" className="cursor-pointer py-2.5">
+                  Enter custom Venmo ID
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Badge
             variant={saveToFriendsList ? "default" : "outline"}
@@ -218,16 +245,6 @@ export function PeopleManager({
           >
             Save to friends
           </Badge>
-
-          {!useNameAsVenmoId && (
-            <Badge
-              variant={showVenmoField ? "default" : "outline"}
-              className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity"
-              onClick={() => setShowVenmoField(!showVenmoField)}
-            >
-              Add custom Venmo ID
-            </Badge>
-          )}
         </div>
 
         {showVenmoField && !useNameAsVenmoId && (
