@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Upload, X, ImageIcon, Loader2, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -39,6 +40,11 @@ export function ReceiptUploader({
 }: Props) {
   const { isNative } = usePlatform();
   const { pickImage } = useImagePicker();
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [imagePreview]);
 
   const handleSelectImage = async () => {
     if (isNative && onImageSelected) {
@@ -118,11 +124,19 @@ export function ReceiptUploader({
           </div>
 
           <div className="relative rounded-lg overflow-hidden border">
-            <img
-              src={imagePreview}
-              alt="Receipt preview"
-              className="w-full h-auto max-h-48 md:max-h-80 object-contain"
-            />
+            {imageError ? (
+              <div className="w-full h-48 md:h-80 flex flex-col items-center justify-center bg-muted text-muted-foreground">
+                <ImageIcon className="w-10 h-10 mb-2" />
+                <p>Could not load image.</p>
+              </div>
+            ) : (
+              <img
+                src={imagePreview || ''}
+                alt="Receipt preview"
+                className="w-full h-auto max-h-48 md:max-h-80 object-contain"
+                onError={() => setImageError(true)}
+              />
+            )}
           </div>
 
           <Button

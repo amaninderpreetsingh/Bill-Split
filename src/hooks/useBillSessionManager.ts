@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import {
   collection,
   query,
@@ -11,6 +11,7 @@ import {
   Timestamp,
   limit,
   orderBy,
+  runTransaction,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/config/firebase';
@@ -31,6 +32,7 @@ export function useBillSessionManager() {
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
+  const isCreatingSession = useRef(false);
 
   const getSessionsCollectionRef = useCallback(() => {
     if (!user) return null;
@@ -54,8 +56,24 @@ export function useBillSessionManager() {
       const q = query(collRef, where('status', '==', 'active'), limit(1));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        setActiveSession({ ...doc.data(), id: doc.id } as BillSession);
+        const docSnapshot = querySnapshot.docs[0];
+        const session = { ...docSnapshot.data(), id: docSnapshot.id } as BillSession;
+
+        if (session.receiptImageUrl) {
+          try {
+            const response = await fetch(session.receiptImageUrl, { method: 'HEAD' });
+            if (!response.ok) {
+              console.warn(`Image not found for active session ${session.id}. Clearing fields.`);
+              const docRef = doc(collRef, session.id);
+              await setDoc(docRef, { receiptImageUrl: null, receiptFileName: null }, { merge: true });
+              session.receiptImageUrl = null;
+              session.receiptFileName = null;
+            }
+          } catch (error) {
+            console.error('Error verifying image URL:', error);
+          }
+        }
+        setActiveSession(session);
       } else {
         setActiveSession(null);
       }
@@ -75,7 +93,25 @@ export function useBillSessionManager() {
       const q = query(collRef, where('status', '==', 'saved'), orderBy('savedAt', 'desc'));
       const querySnapshot = await getDocs(q);
       const saved = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as BillSession));
-      setSavedSessions(saved);
+
+      const verifiedSessions = await Promise.all(saved.map(async session => {
+        if (session.receiptImageUrl) {
+          try {
+            const response = await fetch(session.receiptImageUrl, { method: 'HEAD' });
+            if (!response.ok) {
+              console.warn(`Image not found for saved session ${session.id}. Clearing fields.`);
+              const docRef = doc(collRef, session.id);
+              await setDoc(docRef, { receiptImageUrl: null, receiptFileName: null }, { merge: true });
+              return { ...session, receiptImageUrl: null, receiptFileName: null };
+            }
+          } catch (error) {
+            console.error('Error verifying image URL for saved session:', error);
+          }
+        }
+        return session;
+      }));
+
+      setSavedSessions(verifiedSessions);
     } catch (error) {
       console.error("Error loading saved sessions:", error);
       toast({ title: "Error", description: "Could not load saved sessions.", variant: "destructive" });
@@ -88,24 +124,39 @@ export function useBillSessionManager() {
 
     const cleanedData = removeUndefinedFields(sessionData);
 
-    // If an image is being removed from the session, delete it from Storage
-    if (activeSession?.receiptFileName && !cleanedData.receiptImageUrl) {
-      const oldStorageRef = getStorageRef(activeSession.receiptFileName);
-      if (oldStorageRef) {
-        deleteObject(oldStorageRef).catch(err => {
-          console.error("Failed to delete orphaned image:", err);
-        });
-      }
-    }
-
     try {
-      let sessionToSave: BillSession;
+      let sessionToSave: BillSession | null = null;
       if (activeSession?.id) {
         const docRef = doc(collRef, activeSession.id);
-        sessionToSave = { ...activeSession, ...cleanedData };
-        await setDoc(docRef, sessionToSave, { merge: true });
+        await runTransaction(db, async (transaction) => {
+          const sessionDoc = await transaction.get(docRef);
+          if (!sessionDoc.exists()) {
+            throw new Error("Session document does not exist!");
+          }
+
+          const currentData = sessionDoc.data() as BillSession;
+
+          if (currentData.receiptFileName && !cleanedData.receiptImageUrl && cleanedData.receiptImageUrl !== undefined) {
+            const oldStorageRef = getStorageRef(currentData.receiptFileName);
+            if (oldStorageRef) {
+              deleteObject(oldStorageRef).catch(err => {
+                console.error("Failed to delete orphaned image:", err);
+              });
+            }
+          }
+
+          const updatedData = { ...currentData, ...cleanedData };
+          transaction.update(docRef, updatedData);
+          sessionToSave = updatedData;
+        });
+
       } else {
-        // Create a new session
+        if (isCreatingSession.current) {
+          console.warn("Session creation already in progress, skipping.");
+          return;
+        }
+        isCreatingSession.current = true;
+
         const newDocRef = doc(collRef);
         sessionToSave = {
           id: newDocRef.id,
@@ -121,9 +172,14 @@ export function useBillSessionManager() {
         };
         await setDoc(newDocRef, sessionToSave);
       }
-      setActiveSession(sessionToSave);
+
+      if (sessionToSave) {
+        setActiveSession(sessionToSave);
+      }
     } catch (error) {
       console.error("Error saving session:", error);
+    } finally {
+      isCreatingSession.current = false;
     }
   }, [activeSession, getSessionsCollectionRef, getStorageRef]);
 
@@ -199,7 +255,15 @@ export function useBillSessionManager() {
 
       if (receiptFileName) {
         const storageRef = getStorageRef(receiptFileName);
-        if (storageRef) await deleteObject(storageRef);
+        if (storageRef) {
+          try {
+            await deleteObject(storageRef);
+          } catch (error: any) {
+            if (error.code !== 'storage/object-not-found') {
+              console.error("Error deleting receipt image:", error);
+            }
+          }
+        }
       }
 
       setSavedSessions(prev => prev.filter(s => s.id !== sessionId));

@@ -192,12 +192,14 @@ export default function AIScanView() {
     await Promise.all([analysisPromise, uploadPromise]);
   };
 
-  const handleImageSelected = (fileOrBase64: File | string) => {
+  const handleImageSelected = async (fileOrBase64: File | string) => {
     if (typeof fileOrBase64 === 'string') {
       // From mobile camera (base64 string)
       upload.setImagePreview(fileOrBase64);
       // Convert base64 to file for upload
-      const file = new File([fileOrBase64], 'receipt.jpg', { type: 'image/jpeg' });
+      const response = await fetch(fileOrBase64);
+      const blob = await response.blob();
+      const file = new File([blob], 'receipt.jpg', { type: blob.type });
       upload.setSelectedFile(file);
     } else {
       // From web file input (File object)
