@@ -74,7 +74,7 @@ export function AddFromSquadDialog({ open, onOpenChange, onAddSquad }: AddFromSq
           ) : squads.length === 0 ? (
             <EmptySquadsMessage />
           ) : selectedSquad ? (
-            <SquadPreview squad={selectedSquad} onBack={() => setSelectedSquad(null)} />
+            <SquadPreview squad={selectedSquad} />
           ) : (
             <>
               <SquadSearchInput value={searchQuery} onChange={setSearchQuery} />
@@ -89,8 +89,8 @@ export function AddFromSquadDialog({ open, onOpenChange, onAddSquad }: AddFromSq
 
         {selectedSquad && (
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
+            <Button variant="outline" onClick={() => setSelectedSquad(null)}>
+              Back to squads
             </Button>
             <Button onClick={handleConfirmAdd}>
               <UserPlus className="w-4 h-4 mr-2" />
@@ -155,7 +155,7 @@ function SquadSelectionList({ squads, onSelect, searchQuery }: SquadSelectionLis
                 {squad.members.length} {squad.members.length === 1 ? 'member' : 'members'}
               </p>
             </div>
-            <UserPlus className="w-4 h-4 text-muted-foreground" />
+            <UserPlus className="w-4 h-4 text-muted-foreground " />
           </div>
         </button>
       ))}
@@ -165,15 +165,11 @@ function SquadSelectionList({ squads, onSelect, searchQuery }: SquadSelectionLis
 
 interface SquadPreviewProps {
   squad: Squad;
-  onBack: () => void;
 }
 
-function SquadPreview({ squad, onBack }: SquadPreviewProps) {
+function SquadPreview({ squad }: SquadPreviewProps) {
   return (
     <div className="space-y-4">
-      <Button variant="ghost" size="sm" onClick={onBack}>
-        ← Back to squads
-      </Button>
       <div className="border border-border rounded-lg p-4">
         <h3 className="font-semibold text-lg mb-2">{squad.name}</h3>
         {squad.description && (

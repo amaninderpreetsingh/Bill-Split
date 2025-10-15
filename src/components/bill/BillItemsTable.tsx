@@ -105,8 +105,8 @@ export function BillItemsTable({
                   onSave={onAddItem}
                   onCancel={onCancelAdding}
                   layout="table"
+                  hasPeople={people.length > 0}
                 />
-                {people.length > 0 && <TableCell></TableCell>}
               </TableRow>
             )}
 
@@ -138,11 +138,33 @@ export function BillItemsTable({
                       onSave={onSave}
                       onCancel={onCancel}
                       layout="table"
+                      hasPeople={people.length > 0}
                     />
                   ) : (
                     <>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                      {people.length > 0 && (
+                        <TableCell>
+                          {assignmentMode === 'checkboxes' ? (
+                            <ItemAssignmentBadges
+                              item={item}
+                              people={people}
+                              itemAssignments={itemAssignments}
+                              onAssign={onAssign}
+                              showSplit={true}
+                            />
+                          ) : (
+                            <ItemAssignmentDropdown
+                              item={item}
+                              people={people}
+                              itemAssignments={itemAssignments}
+                              onAssign={onAssign}
+                              showSplit={true}
+                            />
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <div className="flex gap-1">
                           <Button size="sm" variant="ghost" onClick={() => onEdit(item.id, item.name, item.price)}>
@@ -154,27 +176,6 @@ export function BillItemsTable({
                         </div>
                       </TableCell>
                     </>
-                  )}
-                  {people.length > 0 && (
-                    <TableCell>
-                      {assignmentMode === 'checkboxes' ? (
-                        <ItemAssignmentBadges
-                          item={item}
-                          people={people}
-                          itemAssignments={itemAssignments}
-                          onAssign={onAssign}
-                          showSplit={true}
-                        />
-                      ) : (
-                        <ItemAssignmentDropdown
-                          item={item}
-                          people={people}
-                          itemAssignments={itemAssignments}
-                          onAssign={onAssign}
-                          showSplit={true}
-                        />
-                      )}
-                    </TableCell>
                   )}
                 </TableRow>
               );

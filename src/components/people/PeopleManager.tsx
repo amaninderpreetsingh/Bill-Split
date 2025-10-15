@@ -1,16 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, UserPlus, Trash2, UserCheck, ChevronDown } from 'lucide-react';
+import { Users, UserPlus, Trash2, UserCheck, ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Person } from '@/types';
 import { AddFromFriendsDialog } from './AddFromFriendsDialog';
 import { AddFromSquadDialog } from '@/components/squads/AddFromSquadDialog';
@@ -205,38 +199,75 @@ export function PeopleManager({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Badge
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
                 variant="outline"
-                className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity flex items-center gap-1"
+                className={`justify-between hover:bg-secondary ${
+                  useNameAsVenmoId || showVenmoField ? 'bg-primary/10' : ''
+                }`}
               >
-                Add Venmo ID
-                <ChevronDown className="w-3 h-3" />
-              </Badge>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuRadioGroup
-                value={useNameAsVenmoId ? "use-name" : "custom"}
-                onValueChange={(value) => {
-                  if (value === "use-name") {
+                {useNameAsVenmoId
+                  ? 'Using name as Venmo ID'
+                  : showVenmoField
+                  ? 'Add Venmo ID'
+                  : 'Venmo ID Options'}
+                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <div className="p-2 space-y-1">
+                <div
+                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-md cursor-pointer transition-all ${
+                    useNameAsVenmoId
+                      ? 'bg-primary/10 hover:bg-primary/20'
+                      : 'hover:bg-secondary'
+                  }`}
+                  onClick={() => {
                     onUseNameAsVenmoIdChange(true);
                     setShowVenmoField(false);
-                  } else {
+                  }}
+                >
+                  <div
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                      useNameAsVenmoId
+                        ? 'bg-primary border-primary'
+                        : 'border-input'
+                    }`}
+                  >
+                    {useNameAsVenmoId && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span className="text-sm font-medium flex-1">
+                    Use name as Venmo ID
+                  </span>
+                </div>
+                <div
+                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-md cursor-pointer transition-all ${
+                    showVenmoField && !useNameAsVenmoId
+                      ? 'bg-primary/10 hover:bg-primary/20'
+                      : 'hover:bg-secondary'
+                  }`}
+                  onClick={() => {
                     onUseNameAsVenmoIdChange(false);
                     setShowVenmoField(true);
-                  }
-                }}
-              >
-                <DropdownMenuRadioItem value="use-name" className="cursor-pointer py-2.5">
-                  Use name as Venmo ID
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="custom" className="cursor-pointer py-2.5">
-                  Enter custom Venmo ID
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  }}
+                >
+                  <div
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                      showVenmoField && !useNameAsVenmoId
+                        ? 'bg-primary border-primary'
+                        : 'border-input'
+                    }`}
+                  >
+                    {showVenmoField && !useNameAsVenmoId && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span className="text-sm font-medium flex-1">
+                    Add Venmo ID
+                  </span>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <Badge
             variant={saveToFriendsList ? "default" : "outline"}

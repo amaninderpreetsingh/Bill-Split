@@ -13,6 +13,7 @@ interface ItemFormFieldsProps {
   onSave: () => void;
   onCancel: () => void;
   layout?: 'card' | 'table';
+  hasPeople?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export function ItemFormFields({
   onSave,
   onCancel,
   layout = 'card',
+  hasPeople = false,
 }: ItemFormFieldsProps) {
   const handleKeyPress = (e: React.KeyboardEvent, canSubmit: boolean) => {
     if (e.key === 'Enter' && canSubmit) {
@@ -38,6 +40,7 @@ export function ItemFormFields({
   const canSubmit = itemName.trim() && itemPrice.trim();
 
   // Table layout - renders as table cells
+  // Column order: Item | Price | Assigned To (if hasPeople) | Actions
   if (layout === 'table') {
     return (
       <>
@@ -69,6 +72,7 @@ export function ItemFormFields({
             />
           </div>
         </TableCell>
+        {hasPeople && <TableCell></TableCell>}
         <TableCell>
           <div className="flex gap-1">
             <Button
