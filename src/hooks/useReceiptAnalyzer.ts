@@ -4,6 +4,9 @@ import { MOCK_BILL_DATA, MOCK_PEOPLE } from '@/utils/constants';
 import { Person } from '@/types';
 import { useToast } from './use-toast';
 import { mergeBillData } from '@/utils/billCalculations';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
+import { getFileChecksum } from '@/utils/crypto';
 
 /**
  * Hook for analyzing receipts using AI and loading mock data
@@ -12,7 +15,6 @@ import { mergeBillData } from '@/utils/billCalculations';
  * @param currentBillData - Current bill data (for merging)
  * @returns Receipt analyzer state and handlers
  */
-
 export function useReceiptAnalyzer(
   setBillData: (data: BillData | null) => void,
   setPeople: (people: Person[]) => void,
@@ -21,14 +23,28 @@ export function useReceiptAnalyzer(
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
 
-  const analyzeReceipt = async (imagePreview: string) => {
-    if (!imagePreview) return;
+  const analyzeReceipt = async (imageFile: File, imagePreview: string) => {
+    if (!imageFile || !imagePreview) return;
 
     setIsAnalyzing(true);
     try {
-      const data = await analyzeBillImage(imagePreview);
+      const checksum = await getFileChecksum(imageFile);
+      const cacheRef = doc(db, 'receiptAnalysisCache', checksum);
+      const cacheSnap = await getDoc(cacheRef);
 
-      // If there's existing bill data, merge with new data
+      let data: BillData;
+
+      if (cacheSnap.exists()) {
+        data = cacheSnap.data() as BillData;
+        toast({
+          title: 'Used Cached Result',
+          description: 'This receipt has been analyzed before.',
+        });
+      } else {
+        data = await analyzeBillImage(imagePreview);
+        await setDoc(cacheRef, data);
+      }
+
       if (currentBillData) {
         const mergedData = mergeBillData(currentBillData, data);
         setBillData(mergedData);
@@ -37,7 +53,6 @@ export function useReceiptAnalyzer(
           description: `Added ${data.items.length} new items to your bill.`,
         });
       } else {
-        // No existing data, just set the new data
         setBillData(data);
         toast({
           title: 'Success!',
@@ -55,6 +70,17 @@ export function useReceiptAnalyzer(
     }
   };
 
+  const deleteAnalysisCache = async (file: File) => {
+    if (!file) return;
+    try {
+      const checksum = await getFileChecksum(file);
+      const cacheRef = doc(db, 'receiptAnalysisCache', checksum);
+      await deleteDoc(cacheRef);
+    } catch (error) {
+      console.error('Error deleting analysis cache:', error);
+    }
+  };
+
   const loadMockData = () => {
     setBillData(MOCK_BILL_DATA);
     setPeople(MOCK_PEOPLE);
@@ -68,5 +94,6 @@ export function useReceiptAnalyzer(
     isAnalyzing,
     analyzeReceipt,
     loadMockData,
+    deleteAnalysisCache,
   };
 }

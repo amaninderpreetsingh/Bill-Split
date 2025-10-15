@@ -66,7 +66,12 @@ export default function AIScanView() {
   });
 
   const upload = useFileUpload();
-  const analyzer = useReceiptAnalyzer(setBillData, setPeople, billData);
+  const analyzer = useReceiptAnalyzer(
+    setBillData,
+    setPeople,
+    billData
+  );
+
   const editor = useItemEditor(
     billData,
     setBillData,
@@ -165,6 +170,9 @@ export default function AIScanView() {
   };
 
   const handleRemoveImage = () => {
+    if (upload.selectedFile) {
+      analyzer.deleteAnalysisCache(upload.selectedFile);
+    }
     // Clear local UI state immediately
     upload.handleRemoveImage();
     // Persist the removal to Firebase
@@ -186,7 +194,7 @@ export default function AIScanView() {
     }
 
     // Kick off analysis and upload in parallel
-    const analysisPromise = analyzer.analyzeReceipt(upload.imagePreview);
+    const analysisPromise = analyzer.analyzeReceipt(upload.selectedFile, upload.imagePreview);
     const uploadPromise = uploadReceiptImage(upload.selectedFile);
 
     await Promise.all([analysisPromise, uploadPromise]);
