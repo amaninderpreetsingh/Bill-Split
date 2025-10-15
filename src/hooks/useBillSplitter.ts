@@ -2,14 +2,15 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { BillData, ItemAssignment, AssignmentMode, PersonTotal, Person } from '@/types';
 import { calculatePersonTotals, areAllItemsAssigned } from '@/utils/calculations';
 import { useToast } from './use-toast';
+import { useSessionStorage, clearBillSplitSessionStorage } from './useSessionStorage';
 
 export function useBillSplitter(people: Person[]) {
-  const [billData, setBillData] = useState<BillData | null>(null);
-  const [itemAssignments, setItemAssignments] = useState<ItemAssignment>({});
-  const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>('checkboxes');
-  const [customTip, setCustomTip] = useState('');
-  const [customTax, setCustomTax] = useState('');
-  const [splitEvenly, setSplitEvenly] = useState(false);
+  const [billData, setBillData] = useSessionStorage<BillData | null>('billsplit_billData', null);
+  const [itemAssignments, setItemAssignments] = useSessionStorage<ItemAssignment>('billsplit_itemAssignments', {});
+  const [assignmentMode, setAssignmentMode] = useSessionStorage<AssignmentMode>('billsplit_assignmentMode', 'checkboxes');
+  const [customTip, setCustomTip] = useSessionStorage<string>('billsplit_customTip', '');
+  const [customTax, setCustomTax] = useSessionStorage<string>('billsplit_customTax', '');
+  const [splitEvenly, setSplitEvenly] = useSessionStorage<boolean>('billsplit_splitEvenly', false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -109,6 +110,11 @@ export function useBillSplitter(people: Person[]) {
     setCustomTip('');
     setCustomTax('');
     setSplitEvenly(false);
+    setAssignmentMode('checkboxes');
+
+    // Clear sessionStorage
+    clearBillSplitSessionStorage();
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

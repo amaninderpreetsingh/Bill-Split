@@ -6,6 +6,7 @@ import { useToast } from './use-toast';
 import { generatePersonId, generateUserId } from '@/utils/billCalculations';
 import { validatePersonInput } from '@/utils/validation';
 import { saveFriendToFirestore, createPersonObject } from '@/utils/firestore';
+import { useSessionStorage } from './useSessionStorage';
 
 /**
  * Hook for managing people on a bill
@@ -14,7 +15,7 @@ import { saveFriendToFirestore, createPersonObject } from '@/utils/firestore';
  */
 
 export function usePeopleManager() {
-  const [people, setPeople] = useState<Person[]>([]);
+  const [people, setPeople] = useSessionStorage<Person[]>('billsplit_people', []);
   const [newPersonName, setNewPersonName] = useState('');
   const [newPersonVenmoId, setNewPersonVenmoId] = useState('');
   const [useNameAsVenmoId, setUseNameAsVenmoId] = useState(false);

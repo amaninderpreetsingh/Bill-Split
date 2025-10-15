@@ -110,7 +110,7 @@ export function VenmoChargeDialog({ charge, open, onOpenChange }: Props) {
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>

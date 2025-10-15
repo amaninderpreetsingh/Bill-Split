@@ -47,7 +47,7 @@ export function CreateGroupDialog({ open, onOpenChange, onCreateGroup }: CreateG
               placeholder="e.g., Roommates, Vacation 2024, Game Night"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleCreate()}
+              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
               autoFocus
             />
           </div>
@@ -64,7 +64,7 @@ export function CreateGroupDialog({ open, onOpenChange, onCreateGroup }: CreateG
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>

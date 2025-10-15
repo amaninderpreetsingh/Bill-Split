@@ -40,6 +40,7 @@ export default function AIScanView() {
 
   const handleStartOver = () => {
     bill.reset();
+    people.setPeople([]);
     if (activeTab === 'ai-scan') {
       upload.handleRemoveImage();
     }

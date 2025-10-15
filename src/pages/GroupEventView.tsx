@@ -37,19 +37,19 @@ export default function GroupEventView() {
 
   return (
     <>
-      <div className="text-center flex items-center justify-between mb-12">
+      <div className="text-center mb-4 md:mb-12 space-y-3 md:space-y-4">
         <div className="space-y-2">
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
             Groups & Events
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             Create groups to organize and track multiple bills for roommates, trips, or events.
           </p>
         </div>
         {groups.length > 0 && (
           <Button className="gap-2" onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Group</span>
+            <span className="sm:inline">New Group</span>
           </Button>
         )}
       </div>
