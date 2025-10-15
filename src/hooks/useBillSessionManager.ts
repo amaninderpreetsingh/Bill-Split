@@ -56,24 +56,8 @@ export function useBillSessionManager() {
       const q = query(collRef, where('status', '==', 'active'), limit(1));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
-        const docSnapshot = querySnapshot.docs[0];
-        const session = { ...docSnapshot.data(), id: docSnapshot.id } as BillSession;
-
-        if (session.receiptImageUrl) {
-          try {
-            const response = await fetch(session.receiptImageUrl, { method: 'HEAD' });
-            if (!response.ok) {
-              console.warn(`Image not found for active session ${session.id}. Clearing fields.`);
-              const docRef = doc(collRef, session.id);
-              await setDoc(docRef, { receiptImageUrl: null, receiptFileName: null }, { merge: true });
-              session.receiptImageUrl = null;
-              session.receiptFileName = null;
-            }
-          } catch (error) {
-            console.error('Error verifying image URL:', error);
-          }
-        }
-        setActiveSession(session);
+        const doc = querySnapshot.docs[0];
+        setActiveSession({ ...doc.data(), id: doc.id } as BillSession);
       } else {
         setActiveSession(null);
       }
@@ -93,25 +77,7 @@ export function useBillSessionManager() {
       const q = query(collRef, where('status', '==', 'saved'), orderBy('savedAt', 'desc'));
       const querySnapshot = await getDocs(q);
       const saved = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as BillSession));
-
-      const verifiedSessions = await Promise.all(saved.map(async session => {
-        if (session.receiptImageUrl) {
-          try {
-            const response = await fetch(session.receiptImageUrl, { method: 'HEAD' });
-            if (!response.ok) {
-              console.warn(`Image not found for saved session ${session.id}. Clearing fields.`);
-              const docRef = doc(collRef, session.id);
-              await setDoc(docRef, { receiptImageUrl: null, receiptFileName: null }, { merge: true });
-              return { ...session, receiptImageUrl: null, receiptFileName: null };
-            }
-          } catch (error) {
-            console.error('Error verifying image URL for saved session:', error);
-          }
-        }
-        return session;
-      }));
-
-      setSavedSessions(verifiedSessions);
+      setSavedSessions(saved);
     } catch (error) {
       console.error("Error loading saved sessions:", error);
       toast({ title: "Error", description: "Could not load saved sessions.", variant: "destructive" });
