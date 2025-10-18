@@ -1,0 +1,16 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to upload/read their own receipts
+    match /receipts/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow anyone to read/write collaborative session receipts
+    // This is needed for anonymous users and shared sessions
+    match /receipts/collaborative/{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -7,12 +7,14 @@ import { BillSummary } from '@/components/bill/BillSummary';
 import { SplitSummary } from '@/components/people/SplitSummary';
 import { AssignmentModeToggle } from '@/components/bill/AssignmentModeToggle';
 import { FeatureCards } from '@/components/shared/FeatureCards';
+import { ShareSessionModal } from '@/components/share/ShareSessionModal';
 import { useBillSplitter } from '@/hooks/useBillSplitter';
 import { usePeopleManager } from '@/hooks/usePeopleManager';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useReceiptAnalyzer } from '@/hooks/useReceiptAnalyzer';
 import { useItemEditor } from '@/hooks/useItemEditor';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useShareSession } from '@/hooks/useShareSession';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Receipt, Users, Upload, Edit, Loader2 } from 'lucide-react';
@@ -80,6 +82,11 @@ export default function AIScanView() {
     customTip,
     bill.removeItemAssignments
   );
+
+  const { sharePrivateSession, isSharing } = useShareSession();
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharedSessionId, setSharedSessionId] = useState<string | null>(null);
+  const [shareCode, setShareCode] = useState<string | null>(null);
 
   // Load session data from Firebase into local state
   useEffect(() => {
@@ -175,6 +182,22 @@ export default function AIScanView() {
     await archiveAndStartNewSession();
   };
 
+  const handleShare = async () => {
+    if (!activeSession) return;
+
+    // Share the session (receipt URL will be reused from private session)
+    const result = await sharePrivateSession(activeSession);
+
+    if (result) {
+      setSharedSessionId(result.sessionId);
+      setShareCode(result.shareCode);
+      setShowShareModal(true);
+
+      // Navigate to the collaborative session
+      navigate(`/session/${result.sessionId}`);
+    }
+  };
+
   const handleAnalyzeReceipt = async () => {
     if (!upload.imagePreview || !upload.selectedFile) {
       console.error("Cannot analyze: image preview or file is missing.");
@@ -231,6 +254,7 @@ export default function AIScanView() {
         onLoadMock={analyzer.loadMockData}
         onStartOver={handleStartOver}
         onSave={handleSave}
+        onShare={handleShare}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -446,6 +470,16 @@ export default function AIScanView() {
       </Tabs>
 
       {!billData && <FeatureCards />}
+
+      {/* Share Modal */}
+      {sharedSessionId && shareCode && (
+        <ShareSessionModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          sessionId={sharedSessionId}
+          shareCode={shareCode}
+        />
+      )}
     </>
   );
 }

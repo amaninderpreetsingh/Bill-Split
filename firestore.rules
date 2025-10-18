@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Collaborative sessions: anyone can read/write
+    // This allows anonymous users to participate
+    match /collaborativeSessions/{sessionId} {
+      allow read, write: if true;
+    }
+
+    // User's private data: only owner can access
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // User's private sessions
+      match /sessions/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // User's session history
+      match /sessionHistory/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Receipt analysis cache (if you re-add the cache feature later)
+    match /receiptAnalysisCache/{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
