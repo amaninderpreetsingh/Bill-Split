@@ -272,14 +272,13 @@ export default function AIScanView() {
                 newPersonName={peopleManager.newPersonName}
                 newPersonVenmoId={peopleManager.newPersonVenmoId}
                 useNameAsVenmoId={peopleManager.useNameAsVenmoId}
-                saveToFriendsList={peopleManager.saveToFriendsList}
                 onNameChange={peopleManager.setNewPersonName}
                 onVenmoIdChange={peopleManager.setNewPersonVenmoId}
                 onUseNameAsVenmoIdChange={peopleManager.setUseNameAsVenmoId}
-                onSaveToFriendsListChange={peopleManager.setSaveToFriendsList}
                 onAdd={peopleManager.addPerson}
                 onAddFromFriend={peopleManager.addFromFriend}
                 onRemove={handleRemovePerson}
+                onSaveAsFriend={peopleManager.savePersonAsFriend}
                 setPeople={setPeople}
               />
 
@@ -360,14 +359,13 @@ export default function AIScanView() {
               newPersonName={peopleManager.newPersonName}
               newPersonVenmoId={peopleManager.newPersonVenmoId}
               useNameAsVenmoId={peopleManager.useNameAsVenmoId}
-              saveToFriendsList={peopleManager.saveToFriendsList}
               onNameChange={peopleManager.setNewPersonName}
               onVenmoIdChange={peopleManager.setNewPersonVenmoId}
               onUseNameAsVenmoIdChange={peopleManager.setUseNameAsVenmoId}
-              onSaveToFriendsListChange={peopleManager.setSaveToFriendsList}
               onAdd={peopleManager.addPerson}
               onAddFromFriend={peopleManager.addFromFriend}
               onRemove={handleRemovePerson}
+              onSaveAsFriend={peopleManager.savePersonAsFriend}
               setPeople={setPeople}
             />
 
