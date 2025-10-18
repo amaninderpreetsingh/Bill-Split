@@ -269,7 +269,7 @@ export function PeopleManager({
             </PopoverContent>
           </Popover>
 
-          <Button onClick={handleAdd} className="shrink-0">
+          <Button onClick={handleAdd} variant="success" className="shrink-0">
             <UserPlus className="w-4 h-4 mr-1" />
             Add
           </Button>

@@ -10,7 +10,7 @@ interface ShareButtonProps {
 
 export function ShareButton({
   onClick,
-  variant = 'default',
+  variant = 'info',
   size = 'sm',
   className = '',
 }: ShareButtonProps) {

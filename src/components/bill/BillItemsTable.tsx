@@ -66,7 +66,7 @@ export function BillItemsTable({
     <>
       {!isAdding && (
         <div className="mb-4 flex gap-2">
-          <Button onClick={onStartAdding} className="gap-2">
+          <Button onClick={onStartAdding} variant="success" className="gap-2">
             <Plus className="w-4 h-4" />
             {UI_TEXT.ADD_ITEM}
           </Button>

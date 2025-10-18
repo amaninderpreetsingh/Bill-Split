@@ -13,7 +13,7 @@ interface Props {
 export function HeroSection({ hasBillData, onLoadMock, onStartOver, onSave, onShare }: Props) {
   return (
     <div className="text-center mb-4 md:mb-12 space-y-3 md:space-y-4">
-      <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
+      <h2 className="text-3xl md:text-5xl font-bold bg-gradient-hero bg-clip-text text-transparent">
         {UI_TEXT.SPLIT_YOUR_BILL}
       </h2>
       <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -26,16 +26,16 @@ export function HeroSection({ hasBillData, onLoadMock, onStartOver, onSave, onSh
         {hasBillData && (
           <>
             {onShare && (
-              <Button variant="default" size="sm" onClick={onShare}>
+              <Button variant="info" size="sm" onClick={onShare}>
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>
             )}
-            <Button variant="secondary" size="sm" onClick={onSave}>
+            <Button variant="success" size="sm" onClick={onSave}>
               <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
-            <Button variant="outline" size="sm" onClick={onStartOver}>
+            <Button variant="warning" size="sm" onClick={onStartOver}>
               <RotateCcw className="w-4 h-4 mr-2" />
               {UI_TEXT.START_OVER}
             </Button>

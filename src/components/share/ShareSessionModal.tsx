@@ -142,7 +142,7 @@ export function ShareSessionModal({
           {/* Action Buttons */}
           <div className="flex flex-col gap-2">
             {navigator.share && (
-              <Button onClick={handleNativeShare} variant="default" className="w-full">
+              <Button onClick={handleNativeShare} variant="info" className="w-full">
                 <Share2 className="w-4 h-4 mr-2" />
                 Share via...
               </Button>

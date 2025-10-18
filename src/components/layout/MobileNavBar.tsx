@@ -16,7 +16,7 @@ export function MobileNavBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-10 md:hidden">
       {/* Backdrop blur and gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-white/80 backdrop-blur-lg border-t border-gray-200/50" />
+      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/95 to-card/80 backdrop-blur-lg border-t border-border/50" />
 
       {/* Safe area padding for bottom (for devices with home indicators) */}
       <div className="relative px-6 pt-2 pb-6 safe-bottom">
@@ -32,8 +32,8 @@ export function MobileNavBar() {
                   transition-all duration-300 ease-out
                   ${
                     isActive
-                      ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
-                      : 'text-gray-600 hover:bg-gray-100 active:scale-95'
+                      ? 'bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-medium scale-105'
+                      : 'text-muted-foreground hover:bg-secondary/50 active:scale-95'
                   }
                 `}
               >
