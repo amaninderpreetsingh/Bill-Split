@@ -34,10 +34,12 @@ export default function AIScanView() {
     activeSession,
     isLoadingSessions,
     isUploading,
-    saveSession,
     archiveAndStartNewSession,
+    clearSession,
     uploadReceiptImage,
     resumeSession,
+    saveSession,
+    removeReceiptImage,
   } = useBillSession();
 
   const [people, setPeople] = useState<Person[]>([]);
@@ -124,80 +126,79 @@ export default function AIScanView() {
 
   useSessionTimeout({
     onTimeout: () => {
-      // Only archive if there is data to save
-      if (billData || people.length > 0) {
-        archiveAndStartNewSession();
-      }
+      // Clear session on timeout without saving
+      clearSession();
     },
     timeoutMinutes: 20,
   });
 
-  // Save local state to Firebase session
+  // Debounced auto-save for user edits
   useEffect(() => {
-    // Avoid saving during initial load or if there's no data to save
-    if (isInitializing.current || isLoadingSessions || (!billData && people.length === 0)) {
-      return;
-    }
+    // Don't auto-save during initialization
+    if (isInitializing.current) return;
 
-    const debouncedSave = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       saveSession({
         billData,
-        itemAssignments,
         people,
+        itemAssignments,
         customTip,
         customTax,
         assignmentMode,
         splitEvenly,
+        receiptImageUrl: activeSession?.receiptImageUrl || null,
+        receiptFileName: activeSession?.receiptFileName || null,
       });
-    }, 1000); // Debounce to avoid rapid writes
+    }, 1500); // Debounce by 1.5 seconds
 
-    return () => clearTimeout(debouncedSave);
-  }, [
-    billData,
-    itemAssignments,
-    people,
-    customTip,
-    customTax,
-    assignmentMode,
-    splitEvenly,
-    saveSession,
-    isLoadingSessions,
-  ]);
+    return () => clearTimeout(timeoutId);
+  }, [billData, people, itemAssignments, customTip, customTax, assignmentMode, splitEvenly, activeSession?.receiptImageUrl, activeSession?.receiptFileName, saveSession]);
 
   const handleRemovePerson = (personId: string) => {
     peopleManager.removePerson(personId);
     bill.removePersonFromAssignments(personId);
   };
 
-  const handleRemoveImage = () => {
-    if (upload.selectedFile) {
-      analyzer.deleteAnalysisCache(upload.selectedFile);
-    }
+  const handleRemoveImage = async () => {
     // Clear local UI state immediately
     upload.handleRemoveImage();
-    // Persist the removal to Firebase
-    saveSession({
-      receiptImageUrl: null,
-      receiptFileName: null,
-    });
+
+    // Remove image from Firebase Storage and update session in Firestore
+    await removeReceiptImage();
   };
 
-  const handleStartOver = () => {
-    archiveAndStartNewSession();
+  const handleStartOver = async () => {
+    await clearSession();
+  };
+
+  const handleSave = async () => {
+    await archiveAndStartNewSession();
   };
 
   const handleAnalyzeReceipt = async () => {
     if (!upload.imagePreview || !upload.selectedFile) {
-      // TODO: Add toast notification for user
       console.error("Cannot analyze: image preview or file is missing.");
       return;
     }
 
-    // Kick off analysis and upload in parallel
+    // Fresh upload: analyze and upload in parallel
     const analysisPromise = analyzer.analyzeReceipt(upload.selectedFile, upload.imagePreview);
     const uploadPromise = uploadReceiptImage(upload.selectedFile);
 
-    await Promise.all([analysisPromise, uploadPromise]);
+    const [analyzedBillData, uploadResult] = await Promise.all([analysisPromise, uploadPromise]);
+
+    // Save all state including new upload info
+    await saveSession({
+      billData: analyzedBillData,
+      people,
+      itemAssignments,
+      customTip,
+      customTax,
+      assignmentMode,
+      splitEvenly,
+      receiptImageUrl: uploadResult?.downloadURL,
+      receiptFileName: uploadResult?.fileName,
+    });
   };
 
   const handleImageSelected = async (fileOrBase64: File | string) => {
@@ -229,6 +230,7 @@ export default function AIScanView() {
         hasBillData={!!billData}
         onLoadMock={analyzer.loadMockData}
         onStartOver={handleStartOver}
+        onSave={handleSave}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

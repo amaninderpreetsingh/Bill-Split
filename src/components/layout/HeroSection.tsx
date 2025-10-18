@@ -1,4 +1,4 @@
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UI_TEXT } from '@/utils/uiConstants';
 
@@ -6,9 +6,10 @@ interface Props {
   hasBillData: boolean;
   onLoadMock: () => void;
   onStartOver: () => void;
+  onSave: () => void;
 }
 
-export function HeroSection({ hasBillData, onLoadMock, onStartOver }: Props) {
+export function HeroSection({ hasBillData, onLoadMock, onStartOver, onSave }: Props) {
   return (
     <div className="text-center mb-4 md:mb-12 space-y-3 md:space-y-4">
       <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
@@ -22,10 +23,16 @@ export function HeroSection({ hasBillData, onLoadMock, onStartOver }: Props) {
           Load Test Data
         </Button> */}
         {hasBillData && (
-          <Button variant="outline" size="sm" onClick={onStartOver}>
-            <RotateCcw className="w-4 h-4 mr-2" />
-            {UI_TEXT.START_OVER}
-          </Button>
+          <>
+            <Button variant="default" size="sm" onClick={onSave}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+            <Button variant="outline" size="sm" onClick={onStartOver}>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              {UI_TEXT.START_OVER}
+            </Button>
+          </>
         )}
       </div>
     </div>

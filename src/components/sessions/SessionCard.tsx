@@ -14,7 +14,7 @@ interface SessionCardProps {
 export function SessionCard({ session, isProcessing, onResume, onDelete }: SessionCardProps) {
   const sessionDate = session.savedAt ? format(session.savedAt.toDate(), 'MMM d, yyyy - h:mm a') : 'Current';
   const totalAmount = session.billData?.total?.toFixed(2) || '0.00';
-  const peopleCount = session.people.length;
+  const peopleCount = session.people?.length || 0;
 
   return (
     <Card className="p-4 flex items-center justify-between">

@@ -4,9 +4,6 @@ import { MOCK_BILL_DATA, MOCK_PEOPLE } from '@/utils/constants';
 import { Person } from '@/types';
 import { useToast } from './use-toast';
 import { mergeBillData } from '@/utils/billCalculations';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
-import { getFileChecksum } from '@/utils/crypto';
 
 /**
  * Hook for analyzing receipts using AI and loading mock data
@@ -23,61 +20,45 @@ export function useReceiptAnalyzer(
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
 
-  const analyzeReceipt = async (imageFile: File, imagePreview: string) => {
-    if (!imageFile || !imagePreview) return;
+  const analyzeReceipt = async (
+    imageFile: File,
+    imagePreview: string
+  ): Promise<BillData | null> => {
+    if (!imageFile || !imagePreview) return null;
 
     setIsAnalyzing(true);
     try {
-      const checksum = await getFileChecksum(imageFile);
-      const cacheRef = doc(db, 'receiptAnalysisCache', checksum);
-      const cacheSnap = await getDoc(cacheRef);
+      const data = await analyzeBillImage(imagePreview);
 
-      let data: BillData;
-
-      if (cacheSnap.exists()) {
-        data = cacheSnap.data() as BillData;
-        toast({
-          title: 'Used Cached Result',
-          description: 'This receipt has been analyzed before.',
-        });
-      } else {
-        data = await analyzeBillImage(imagePreview);
-        await setDoc(cacheRef, data);
-      }
-
+      let finalData: BillData;
       if (currentBillData) {
-        const mergedData = mergeBillData(currentBillData, data);
-        setBillData(mergedData);
+        finalData = mergeBillData(currentBillData, data);
+        setBillData(finalData);
         toast({
           title: 'Success!',
           description: `Added ${data.items.length} new items to your bill.`,
         });
       } else {
+        finalData = data;
         setBillData(data);
         toast({
           title: 'Success!',
           description: `Extracted ${data.items.length} items from your receipt.`,
         });
       }
+      return finalData;
     } catch (error) {
       toast({
         title: 'Analysis Failed',
-        description: error instanceof Error ? error.message : 'Could not analyze receipt. Please try again.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Could not analyze receipt. Please try again.',
         variant: 'destructive',
       });
+      return null;
     } finally {
       setIsAnalyzing(false);
-    }
-  };
-
-  const deleteAnalysisCache = async (file: File) => {
-    if (!file) return;
-    try {
-      const checksum = await getFileChecksum(file);
-      const cacheRef = doc(db, 'receiptAnalysisCache', checksum);
-      await deleteDoc(cacheRef);
-    } catch (error) {
-      console.error('Error deleting analysis cache:', error);
     }
   };
 
@@ -94,6 +75,5 @@ export function useReceiptAnalyzer(
     isAnalyzing,
     analyzeReceipt,
     loadMockData,
-    deleteAnalysisCache,
   };
 }
