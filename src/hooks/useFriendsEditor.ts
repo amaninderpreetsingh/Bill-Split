@@ -14,8 +14,6 @@ export function useFriendsEditor() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [newFriendName, setNewFriendName] = useState('');
   const [newFriendVenmoId, setNewFriendVenmoId] = useState('');
-  const [hasChanges, setHasChanges] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
   const [editingVenmoId, setEditingVenmoId] = useState('');
@@ -26,7 +24,7 @@ export function useFriendsEditor() {
     }
   }, [profile]);
 
-  const handleAddFriend = () => {
+  const handleAddFriend = async () => {
     if (!newFriendName.trim()) {
       toast({
         title: ERROR_MESSAGES.NAME_REQUIRED,
@@ -41,15 +39,17 @@ export function useFriendsEditor() {
       venmoId: newFriendVenmoId.trim() || undefined,
     };
 
-    setFriends([...friends, newFriend]);
+    const updatedFriends = [...friends, newFriend];
+    setFriends(updatedFriends);
     setNewFriendName('');
     setNewFriendVenmoId('');
-    setHasChanges(true);
+    await updateFriends(updatedFriends);
   };
 
-  const handleRemoveFriend = (index: number) => {
-    setFriends(friends.filter((_, i) => i !== index));
-    setHasChanges(true);
+  const handleRemoveFriend = async (index: number) => {
+    const updatedFriends = friends.filter((_, i) => i !== index);
+    setFriends(updatedFriends);
+    await updateFriends(updatedFriends);
   };
 
   const handleEditFriend = (index: number) => {
@@ -58,7 +58,7 @@ export function useFriendsEditor() {
     setEditingVenmoId(friends[index].venmoId || '');
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingName.trim()) {
       toast({
         title: ERROR_MESSAGES.NAME_REQUIRED,
@@ -78,7 +78,7 @@ export function useFriendsEditor() {
     setEditingIndex(null);
     setEditingName('');
     setEditingVenmoId('');
-    setHasChanges(true);
+    await updateFriends(updatedFriends);
   };
 
   const handleCancelEdit = () => {
@@ -87,20 +87,11 @@ export function useFriendsEditor() {
     setEditingVenmoId('');
   };
 
-  const handleSaveAll = async () => {
-    setSaving(true);
-    await updateFriends(friends);
-    setSaving(false);
-    setHasChanges(false);
-  };
-
   return {
     // Data
     friends,
     newFriendName,
     newFriendVenmoId,
-    hasChanges,
-    saving,
     editingIndex,
     editingName,
     editingVenmoId,
@@ -117,6 +108,5 @@ export function useFriendsEditor() {
     handleEditFriend,
     handleSaveEdit,
     handleCancelEdit,
-    handleSaveAll,
   };
 }
