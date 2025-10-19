@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, UserPlus, Trash2, UserCheck, ChevronDown, Check } from 'lucide-react';
+import { Users, UserPlus, Trash2, UserCheck, ChevronDown, Check, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Person } from '@/types';
 import { AddFromFriendsDialog } from './AddFromFriendsDialog';
@@ -25,14 +24,13 @@ interface Props {
   newPersonName: string;
   newPersonVenmoId: string;
   useNameAsVenmoId: boolean;
-  saveToFriendsList: boolean;
   onNameChange: (name: string) => void;
   onVenmoIdChange: (venmoId: string) => void;
   onUseNameAsVenmoIdChange: (checked: boolean) => void;
-  onSaveToFriendsListChange: (checked: boolean) => void;
   onAdd: () => void;
   onAddFromFriend: (friend: Friend) => void;
   onRemove: (personId: string) => void;
+  onSaveAsFriend: (person: Person) => void;
   setPeople: React.Dispatch<React.SetStateAction<Person[]>>;
 }
 
@@ -41,14 +39,13 @@ export function PeopleManager({
   newPersonName,
   newPersonVenmoId,
   useNameAsVenmoId,
-  saveToFriendsList,
   onNameChange,
   onVenmoIdChange,
   onUseNameAsVenmoIdChange,
-  onSaveToFriendsListChange,
   onAdd,
   onAddFromFriend,
   onRemove,
+  onSaveAsFriend,
   setPeople
 }: Props) {
   const { user } = useAuth();
@@ -135,6 +132,16 @@ export function PeopleManager({
     setPeople([...people, ...newPeople]);
   };
 
+  const isPersonInFriends = (personName: string): boolean => {
+    return friends.some(friend => friend.name.toLowerCase() === personName.toLowerCase());
+  };
+
+  const handleSaveAsFriend = async (person: Person) => {
+    await onSaveAsFriend(person);
+    // Reload friends list to update the heart icon state
+    await loadFriends();
+  };
+
   return (
     <Card className="p-3 md:p-6">
       <div className="flex items-center gap-2 mb-4">
@@ -143,15 +150,16 @@ export function PeopleManager({
       </div>
 
       <div className="space-y-3 mb-4">
-        <div className="flex flex-col sm:flex-row gap-2">
+        {/* Row 1: Name Input + Venmo Options + Add Button */}
+        <div className="flex gap-2">
           <div className="flex-1 relative">
             <Input
               ref={inputRef}
-              placeholder="Enter person's name"
+              placeholder="Person's name"
               value={newPersonName}
               onChange={(e) => onNameChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !showVenmoField && handleAdd()}
-              className="w-full"
+              className="w-full text-xs placeholder:text-xs"
             />
             {showSuggestions && filteredFriends.length > 0 && (
               <div
@@ -175,45 +183,22 @@ export function PeopleManager({
               </div>
             )}
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button onClick={handleAdd} className="flex-1 sm:flex-none">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add
-            </Button>
-            <Button
-              onClick={() => setFriendsDialogOpen(true)}
-              variant="outline"
-              className="flex-1 sm:flex-none"
-            >
-              <UserCheck className="w-4 h-4 mr-2" />
-              Friends
-            </Button>
-            <Button
-              onClick={() => setSquadDialogOpen(true)}
-              variant="outline"
-              className="flex-1 sm:flex-none"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Squad
-            </Button>
-          </div>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
           <Popover open={venmoPopoverOpen} onOpenChange={setVenmoPopoverOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`justify-between hover:bg-secondary ${
+                size="sm"
+                className={`hover:bg-secondary shrink-0 text-xs whitespace-nowrap ${
                   useNameAsVenmoId || showVenmoField ? 'bg-primary/10' : ''
                 }`}
               >
                 {useNameAsVenmoId
-                  ? 'Use name as Venmo ID'
+                  ? 'Use name'
                   : showVenmoField
-                  ? 'Add Venmo ID'
-                  : 'Add Venmo ID'}
-                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                  ? 'Add Ve...'
+                  : 'Venmo ID'}
+                <ChevronDown className="ml-1 h-3 w-3" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-0" align="start">
@@ -225,10 +210,11 @@ export function PeopleManager({
                       : 'hover:bg-secondary'
                   }`}
                   onClick={() => {
-                    // Toggle: if already selected, deselect (turn off both options)
                     if (showVenmoField && !useNameAsVenmoId) {
+                      // Deselect if already selected
                       setShowVenmoField(false);
                     } else {
+                      // Select this option
                       onUseNameAsVenmoIdChange(false);
                       setShowVenmoField(true);
                     }
@@ -256,8 +242,10 @@ export function PeopleManager({
                   }`}
                   onClick={() => {
                     if (useNameAsVenmoId) {
+                      // Deselect if already selected
                       onUseNameAsVenmoIdChange(false);
                     } else {
+                      // Select this option
                       onUseNameAsVenmoIdChange(true);
                       setShowVenmoField(false);
                     }
@@ -281,15 +269,13 @@ export function PeopleManager({
             </PopoverContent>
           </Popover>
 
-          <Badge
-            variant={saveToFriendsList ? "default" : "outline"}
-            className="cursor-pointer px-4 py-2 text-sm hover:opacity-80 transition-opacity"
-            onClick={() => onSaveToFriendsListChange(!saveToFriendsList)}
-          >
-            Save to friends
-          </Badge>
+          <Button onClick={handleAdd} variant="success" className="shrink-0">
+            <UserPlus className="w-4 h-4 mr-1" />
+            Add
+          </Button>
         </div>
 
+        {/* Row 2: Friends + Squad Buttons */}
         {showVenmoField && !useNameAsVenmoId && (
           <Input
             id="venmoId"
@@ -297,16 +283,32 @@ export function PeopleManager({
             value={newPersonVenmoId}
             onChange={(e) => onVenmoIdChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+            className='text-xs placeholder:text-xs'
           />
         )}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setFriendsDialogOpen(true)}
+            variant="outline"
+            className="flex-1"
+          >
+            <UserCheck className="w-4 h-4 mr-2" />
+            Friends
+          </Button>
+          <Button
+            onClick={() => setSquadDialogOpen(true)}
+            variant="outline"
+            className="flex-1"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Squad
+          </Button>
+        </div>
       </div>
 
       {people.length > 0 && (
         <>
-          <div className="flex justify-end mb-2">
-            <SaveAsSquadButton people={people} />
-          </div>
-          <div className="space-y-2">
+          <div className="space-y-2 mb-4">
             {people.map((person) => (
               <div
                 key={person.id}
@@ -320,15 +322,31 @@ export function PeopleManager({
                     </span>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemove(person.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => !isPersonInFriends(person.name) && handleSaveAsFriend(person)}
+                    title={isPersonInFriends(person.name) ? "Already a friend" : "Save as friend"}
+                    className="hover:bg-transparent"
+                    disabled={isPersonInFriends(person.name)}
+                  >
+                    <Heart className={`w-4 h-4 text-red-500 ${isPersonInFriends(person.name) ? 'fill-red-500' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemove(person.id)}
+                    title="Remove person"
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
+          </div>
+          <div className="flex justify-end">
+            <SaveAsSquadButton people={people} />
           </div>
         </>
       )}

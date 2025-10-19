@@ -165,15 +165,14 @@ export default function GroupDetailView() {
                 newPersonName={people.newPersonName}
                 newPersonVenmoId={people.newPersonVenmoId}
                 useNameAsVenmoId={people.useNameAsVenmoId}
-                saveToFriendsList={people.saveToFriendsList}
                 onNameChange={people.setNewPersonName}
                 onVenmoIdChange={people.setNewPersonVenmoId}
                 onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
-                onSaveToFriendsListChange={people.setSaveToFriendsList}
                 onAdd={people.addPerson}
                 onAddFromFriend={people.addFromFriend}
                 onRemove={handleRemovePerson}
-          setPeople={people.setPeople}
+                onSaveAsFriend={people.savePersonAsFriend}
+                setPeople={people.setPeople}
               />
 
               <Card className="p-4 md:p-6">
@@ -264,15 +263,14 @@ export default function GroupDetailView() {
               newPersonName={people.newPersonName}
               newPersonVenmoId={people.newPersonVenmoId}
               useNameAsVenmoId={people.useNameAsVenmoId}
-              saveToFriendsList={people.saveToFriendsList}
               onNameChange={people.setNewPersonName}
               onVenmoIdChange={people.setNewPersonVenmoId}
               onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
-              onSaveToFriendsListChange={people.setSaveToFriendsList}
               onAdd={people.addPerson}
               onAddFromFriend={people.addFromFriend}
               onRemove={handleRemovePerson}
-          setPeople={people.setPeople}
+              onSaveAsFriend={people.savePersonAsFriend}
+              setPeople={people.setPeople}
             />
 
             <Card className="p-4 md:p-6">

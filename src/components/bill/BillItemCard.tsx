@@ -63,7 +63,7 @@ export function BillItemCard({
     <>
       {!isAdding && (
         <div className="mb-3 flex flex-col gap-2">
-          <Button onClick={onStartAdding} className="w-full gap-2">
+          <Button onClick={onStartAdding} variant="success" className="w-full gap-2">
             <Plus className="w-4 h-4" />
             {UI_TEXT.ADD_ITEM}
           </Button>

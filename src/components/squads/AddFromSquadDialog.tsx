@@ -92,7 +92,7 @@ export function AddFromSquadDialog({ open, onOpenChange, onAddSquad }: AddFromSq
             <Button variant="outline" onClick={() => setSelectedSquad(null)}>
               Back to squads
             </Button>
-            <Button onClick={handleConfirmAdd}>
+            <Button variant="success" onClick={handleConfirmAdd}>
               <UserPlus className="w-4 h-4 mr-2" />
               Add Squad to Bill
             </Button>

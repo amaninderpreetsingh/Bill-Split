@@ -77,11 +77,10 @@ export function ItemFormFields({
           <div className="flex gap-1">
             <Button
               size="sm"
-              className={mode === 'add' ? 'bg-green-600 hover:bg-green-700' : ''}
-              variant={mode === 'edit' ? 'ghost' : 'default'}
+              variant={mode === 'edit' ? 'ghost' : 'success'}
               onClick={onSave}
             >
-              <Check className={`w-4 h-4 ${mode === 'edit' ? 'text-green-600' : ''}`} />
+              <Check className={`w-4 h-4 ${mode === 'edit' ? 'text-success' : ''}`} />
             </Button>
             <Button
               size="sm"
@@ -134,7 +133,7 @@ export function ItemFormFields({
         </div>
       </div>
       <div className="flex gap-2">
-        <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={onSave}>
+        <Button variant="success" className="flex-1" onClick={onSave}>
           <Check className="w-4 h-4 mr-2" />
           {mode === 'add' ? UI_TEXT.ADD_ITEM : UI_TEXT.SAVE}
         </Button>

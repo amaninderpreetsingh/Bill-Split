@@ -72,7 +72,7 @@ export function ManageFriendsCard() {
             onKeyPress={(e) => e.key === 'Enter' && handleAddFriend()}
             className="flex-1 text-base md:text-sm"
           />
-          <Button onClick={handleAddFriend} className="gap-2">
+          <Button onClick={handleAddFriend} variant="success" className="gap-2">
             <UserPlus className="w-4 h-4" />
             <span className="hidden sm:inline">Add</span>
           </Button>
@@ -113,7 +113,7 @@ export function ManageFriendsCard() {
                       size="sm"
                       onClick={handleSaveEdit}
                     >
-                      <Check className="w-4 h-4 text-green-600" />
+                      <Check className="w-4 h-4 text-success" />
                     </Button>
                     <Button
                       variant="ghost"

@@ -9,7 +9,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useFriendsEditor } from '@/hooks/useFriendsEditor';
-import { UI_TEXT, DIALOG_DESCRIPTIONS } from '@/utils/uiConstants';
+import { DIALOG_DESCRIPTIONS } from '@/utils/uiConstants';
 
 interface Props {
   open: boolean;
@@ -21,7 +21,6 @@ export function ManageFriends({ open, onOpenChange }: Props) {
     friends,
     newFriendName,
     newFriendVenmoId,
-    saving,
     editingIndex,
     editingName,
     editingVenmoId,
@@ -34,13 +33,7 @@ export function ManageFriends({ open, onOpenChange }: Props) {
     handleEditFriend,
     handleSaveEdit,
     handleCancelEdit,
-    handleSaveAll,
   } = useFriendsEditor();
-
-  const handleSave = async () => {
-    await handleSaveAll();
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,15 +151,6 @@ export function ManageFriends({ open, onOpenChange }: Props) {
               ))
             )}
           </div>
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            {UI_TEXT.CANCEL}
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? UI_TEXT.SAVING : UI_TEXT.SAVE_CHANGES}
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

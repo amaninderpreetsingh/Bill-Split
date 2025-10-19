@@ -21,7 +21,6 @@ export function usePeopleManager(
   const [newPersonName, setNewPersonName] = useState('');
   const [newPersonVenmoId, setNewPersonVenmoId] = useState('');
   const [useNameAsVenmoId, setUseNameAsVenmoId] = useState(false);
-  const [saveToFriendsList, setSaveToFriendsList] = useState(false);
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const { toast } = useToast();
@@ -63,29 +62,10 @@ export function usePeopleManager(
 
     setPeople([...people, newPerson]);
 
-    // Save to friends list in Firestore if checked
-    if (saveToFriendsList && user) {
-      const result = await saveFriendToFirestore(user.uid, personData);
-
-      if (result.success) {
-        toast({
-          title: 'Saved to friends',
-          description: `${personData.name} has been saved to your friends list.`,
-        });
-      } else if (result.error) {
-        toast({
-          title: result.error.title,
-          description: result.error.description,
-          variant: 'destructive',
-        });
-      }
-    }
-
     // Reset form
     setNewPersonName('');
     setNewPersonVenmoId('');
     setUseNameAsVenmoId(false);
-    setSaveToFriendsList(false);
   };
 
   const removePerson = (personId: string) => {
@@ -107,19 +87,49 @@ export function usePeopleManager(
     });
   };
 
+  const savePersonAsFriend = async (person: Person) => {
+    if (!user) {
+      toast({
+        title: 'Not logged in',
+        description: 'You must be logged in to save friends.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const personData = {
+      name: person.name,
+      venmoId: person.venmoId,
+    };
+
+    const result = await saveFriendToFirestore(user.uid, personData);
+
+    if (result.success) {
+      toast({
+        title: 'Saved to friends',
+        description: `${person.name} has been saved to your friends list.`,
+      });
+    } else if (result.error) {
+      toast({
+        title: result.error.title,
+        description: result.error.description,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     people,
     newPersonName,
     newPersonVenmoId,
     useNameAsVenmoId,
-    saveToFriendsList,
     setNewPersonName,
     setNewPersonVenmoId,
     setUseNameAsVenmoId,
-    setSaveToFriendsList,
     addPerson,
     addFromFriend,
     removePerson,
+    savePersonAsFriend,
     setPeople,
   };
 }

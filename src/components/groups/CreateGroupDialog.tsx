@@ -68,7 +68,7 @@ export function CreateGroupDialog({ open, onOpenChange, onCreateGroup }: CreateG
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!groupName.trim()}>
+          <Button variant="success" onClick={handleCreate} disabled={!groupName.trim()}>
             Create Group
           </Button>
         </DialogFooter>

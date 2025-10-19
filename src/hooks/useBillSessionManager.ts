@@ -105,8 +105,11 @@ export function useBillSessionManager() {
           if (currentData.receiptFileName && !cleanedData.receiptImageUrl && cleanedData.receiptImageUrl !== undefined) {
             const oldStorageRef = getStorageRef(currentData.receiptFileName);
             if (oldStorageRef) {
-              deleteObject(oldStorageRef).catch(err => {
-                console.error("Failed to delete orphaned image:", err);
+              deleteObject(oldStorageRef).catch((err: any) => {
+                // Ignore "not found" errors - the image may have already been deleted
+                if (err.code !== 'storage/object-not-found') {
+                  console.error("Failed to delete orphaned image:", err);
+                }
               });
             }
           }
@@ -157,7 +160,7 @@ export function useBillSessionManager() {
 
       if (!storageRef) return null;
 
-  
+
 
       setIsUploading(true);
 
@@ -167,7 +170,7 @@ export function useBillSessionManager() {
 
         const downloadURL = await getDownloadURL(snapshot.ref);
 
-        
+
 
         if (activeSession?.receiptFileName) {
 
@@ -177,9 +180,7 @@ export function useBillSessionManager() {
 
         }
 
-  
 
-        await saveSession({ receiptImageUrl: downloadURL, receiptFileName: fileName });
 
         return { downloadURL, fileName };
 
@@ -209,6 +210,68 @@ export function useBillSessionManager() {
     setActiveSession(null);
     // The UI will now reflect a new, empty session
   }, [activeSession, getSessionsCollectionRef]);
+
+  const removeReceiptImage = useCallback(async () => {
+    if (!activeSession) return;
+
+    try {
+      // Delete the image from Firebase Storage if it exists
+      if (activeSession.receiptFileName) {
+        const storageRef = getStorageRef(activeSession.receiptFileName);
+        if (storageRef) {
+          try {
+            await deleteObject(storageRef);
+          } catch (error: any) {
+            if (error.code !== 'storage/object-not-found') {
+              console.error("Error deleting receipt image:", error);
+            }
+          }
+        }
+      }
+
+      // Update the session to remove image references
+      await saveSession({
+        receiptImageUrl: null,
+        receiptFileName: null,
+      });
+    } catch (error) {
+      console.error("Error removing receipt image:", error);
+      toast({ title: "Error", description: "Could not remove receipt image.", variant: "destructive" });
+    }
+  }, [activeSession, getStorageRef, saveSession, toast]);
+
+  const clearSession = useCallback(async () => {
+    const collRef = getSessionsCollectionRef();
+    if (!collRef || !activeSession?.id) {
+      setActiveSession(null);
+      return;
+    }
+
+    try {
+      // Delete the active session from Firestore
+      const docRef = doc(collRef, activeSession.id);
+      await deleteDoc(docRef);
+
+      // Delete receipt image if it exists
+      if (activeSession.receiptFileName) {
+        const storageRef = getStorageRef(activeSession.receiptFileName);
+        if (storageRef) {
+          try {
+            await deleteObject(storageRef);
+          } catch (error: any) {
+            if (error.code !== 'storage/object-not-found') {
+              console.error("Error deleting receipt image:", error);
+            }
+          }
+        }
+      }
+
+      setActiveSession(null);
+    } catch (error) {
+      console.error("Error clearing session:", error);
+      toast({ title: "Error", description: "Could not clear session.", variant: "destructive" });
+    }
+  }, [activeSession, getSessionsCollectionRef, getStorageRef, toast]);
 
   const deleteSession = useCallback(async (sessionId: string, receiptFileName?: string) => {
     const collRef = getSessionsCollectionRef();
@@ -299,9 +362,11 @@ export function useBillSessionManager() {
     isResuming,
     saveSession,
     archiveAndStartNewSession,
+    clearSession,
     deleteSession,
     resumeSession,
     uploadReceiptImage,
+    removeReceiptImage,
     loadSavedSessions,
   };
 }

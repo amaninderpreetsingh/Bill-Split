@@ -83,7 +83,7 @@ export function SquadForm({
         onAddMember={handleAddMember}
         onRemoveMember={handleRemoveMember}
       />
-      <Button onClick={handleSubmit} disabled={!isValid} className="w-full">
+      <Button onClick={handleSubmit} variant="success" disabled={!isValid} className="w-full">
         {submitLabel}
       </Button>
       {!isValid && members.length < 2 && (
@@ -285,7 +285,7 @@ function SquadMemberSelector({
             </div>
           )}
         </div>
-        <Button onClick={onAddMember} size="icon" type="button">
+        <Button onClick={onAddMember} variant="success" size="icon" type="button">
           <UserPlus className="w-4 h-4" />
         </Button>
       </div>
