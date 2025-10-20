@@ -1,14 +1,26 @@
-import { Users, Calendar } from 'lucide-react';
+import { Users, Calendar, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Group } from '@/types/group.types';
 import { formatDistanceToNow } from 'date-fns';
 
 interface GroupCardProps {
   group: Group;
   onClick?: () => void;
+  onDelete?: (groupId: string) => void;
+  currentUserId?: string;
 }
 
-export function GroupCard({ group, onClick }: GroupCardProps) {
+export function GroupCard({ group, onClick, onDelete, currentUserId }: GroupCardProps) {
+  const isOwner = currentUserId === group.ownerId;
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(group.id);
+    }
+  };
+
   return (
     <Card
       className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer"
@@ -31,6 +43,16 @@ export function GroupCard({ group, onClick }: GroupCardProps) {
             </div>
           </div>
         </div>
+        {isOwner && onDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={handleDelete}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        )}
       </div>
     </Card>
   );

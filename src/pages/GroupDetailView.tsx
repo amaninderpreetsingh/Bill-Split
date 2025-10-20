@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Edit, Receipt } from 'lucide-react';
+import { ArrowLeft, Upload, Edit, Receipt, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,15 +10,17 @@ import { BillItems } from '@/components/bill/BillItems';
 import { BillSummary } from '@/components/bill/BillSummary';
 import { SplitSummary } from '@/components/people/SplitSummary';
 import { AssignmentModeToggle } from '@/components/bill/AssignmentModeToggle';
+import { InviteMembersDialog } from '@/components/groups/InviteMembersDialog';
 import { useBillSplitter } from '@/hooks/useBillSplitter';
 import { usePeopleManager } from '@/hooks/usePeopleManager';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useReceiptAnalyzer } from '@/hooks/useReceiptAnalyzer';
 import { useItemEditor } from '@/hooks/useItemEditor';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Group } from '@/types/group.types';
+import { Person, BillData, ItemAssignment, AssignmentMode } from '@/types';
 import { UI_TEXT, NAVIGATION, LOADING } from '@/utils/uiConstants';
 
 export default function GroupDetailView() {
@@ -28,24 +30,52 @@ export default function GroupDetailView() {
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ai-scan');
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
-  const people = usePeopleManager();
-  const bill = useBillSplitter(people.people);
+  // Bill splitting state
+  const [people, setPeople] = useState<Person[]>([]);
+  const [billData, setBillData] = useState<BillData | null>(null);
+  const [itemAssignments, setItemAssignments] = useState<ItemAssignment>({});
+  const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>('checkboxes');
+  const [customTip, setCustomTip] = useState<string>('');
+  const [customTax, setCustomTax] = useState<string>('');
+  const [splitEvenly, setSplitEvenly] = useState<boolean>(false);
+
+  const peopleManager = usePeopleManager(people, setPeople);
+  const bill = useBillSplitter({
+    people,
+    billData,
+    setBillData,
+    itemAssignments,
+    setItemAssignments,
+    assignmentMode,
+    setAssignmentMode,
+    customTip,
+    setCustomTip,
+    customTax,
+    setCustomTax,
+    splitEvenly,
+    setSplitEvenly,
+  });
   const upload = useFileUpload();
-  const analyzer = useReceiptAnalyzer(bill.setBillData, people.setPeople, bill.billData);
+  const analyzer = useReceiptAnalyzer(setBillData, setPeople, billData);
   const editor = useItemEditor(
-    bill.billData,
-    bill.setBillData,
-    bill.customTip,
+    billData,
+    setBillData,
+    customTip,
     bill.removeItemAssignments
   );
 
   useEffect(() => {
-    const fetchGroup = async () => {
-      if (!groupId) return;
+    if (!groupId) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const groupDoc = await getDoc(doc(db, 'groups', groupId));
+    // Use real-time listener to keep group data updated
+    const unsubscribe = onSnapshot(
+      doc(db, 'groups', groupId),
+      (groupDoc) => {
         if (groupDoc.exists()) {
           const data = groupDoc.data();
           setGroup({
@@ -56,25 +86,34 @@ export default function GroupDetailView() {
             updatedAt: data.updatedAt?.toDate() || new Date(),
             ownerId: data.ownerId,
             memberIds: data.memberIds || [],
+            pendingInvites: data.pendingInvites || [],
           });
+        } else {
+          setGroup(null);
         }
-      } catch (error) {
+        setLoading(false);
+      },
+      (error) => {
         console.error('Error fetching group:', error);
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    fetchGroup();
+    return () => unsubscribe();
   }, [groupId]);
 
   const handleRemovePerson = (personId: string) => {
-    people.removePerson(personId);
+    peopleManager.removePerson(personId);
     bill.removePersonFromAssignments(personId);
   };
 
   const handleStartOver = () => {
-    bill.reset();
+    setBillData(null);
+    setItemAssignments({});
+    setPeople([]);
+    setCustomTip('');
+    setCustomTax('');
+    setSplitEvenly(false);
     if (activeTab === 'ai-scan') {
       upload.handleRemoveImage();
     }
@@ -110,15 +149,27 @@ export default function GroupDetailView() {
           {NAVIGATION.BACK_TO_GROUPS}
         </Button>
 
-        <div className="space-y-2">
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
-            {group.name}
-          </h2>
-          {group.description && (
-            <p className="text-lg text-muted-foreground">{group.description}</p>
-          )}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="space-y-2">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
+              {group.name}
+            </h2>
+            {group.description && (
+              <p className="text-lg text-muted-foreground">{group.description}</p>
+            )}
+          </div>
+          <Button onClick={() => setInviteDialogOpen(true)} className="gap-2 shrink-0">
+            <UserPlus className="w-4 h-4" />
+            Invite Members
+          </Button>
         </div>
       </div>
+
+      <InviteMembersDialog
+        open={inviteDialogOpen}
+        onOpenChange={setInviteDialogOpen}
+        group={group}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
@@ -133,7 +184,7 @@ export default function GroupDetailView() {
         </TabsList>
 
         <TabsContent value="ai-scan" className="space-y-6">
-          {bill.billData && (
+          {billData && (
             <div className="flex justify-end">
               <button
                 onClick={handleStartOver}
@@ -158,21 +209,21 @@ export default function GroupDetailView() {
             fileInputRef={upload.fileInputRef}
           />
 
-          {bill.billData && (
+          {billData && (
             <div className="space-y-6">
               <PeopleManager
-                people={people.people}
-                newPersonName={people.newPersonName}
-                newPersonVenmoId={people.newPersonVenmoId}
-                useNameAsVenmoId={people.useNameAsVenmoId}
-                onNameChange={people.setNewPersonName}
-                onVenmoIdChange={people.setNewPersonVenmoId}
-                onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
-                onAdd={people.addPerson}
-                onAddFromFriend={people.addFromFriend}
+                people={people}
+                newPersonName={peopleManager.newPersonName}
+                newPersonVenmoId={peopleManager.newPersonVenmoId}
+                useNameAsVenmoId={peopleManager.useNameAsVenmoId}
+                onNameChange={peopleManager.setNewPersonName}
+                onVenmoIdChange={peopleManager.setNewPersonVenmoId}
+                onUseNameAsVenmoIdChange={peopleManager.setUseNameAsVenmoId}
+                onAdd={peopleManager.addPerson}
+                onAddFromFriend={peopleManager.addFromFriend}
                 onRemove={handleRemovePerson}
-                onSaveAsFriend={people.savePersonAsFriend}
-                setPeople={people.setPeople}
+                onSaveAsFriend={peopleManager.savePersonAsFriend}
+                setPeople={setPeople}
               />
 
               <Card className="p-4 md:p-6">
@@ -182,19 +233,19 @@ export default function GroupDetailView() {
                     <h3 className="text-xl font-semibold">{UI_TEXT.BILL_ITEMS}</h3>
                   </div>
 
-                  {people.people.length > 0 && !isMobile && (
+                  {people.length > 0 && !isMobile && (
                     <AssignmentModeToggle
-                      mode={bill.assignmentMode}
-                      onModeChange={bill.setAssignmentMode}
+                      mode={assignmentMode}
+                      onModeChange={setAssignmentMode}
                     />
                   )}
                 </div>
 
                 <BillItems
-                  billData={bill.billData}
-                  people={people.people}
-                  itemAssignments={bill.itemAssignments}
-                  assignmentMode={bill.assignmentMode}
+                  billData={billData}
+                  people={people}
+                  itemAssignments={itemAssignments}
+                  assignmentMode={assignmentMode}
                   editingItemId={editor.editingItemId}
                   editingItemName={editor.editingItemName}
                   editingItemPrice={editor.editingItemPrice}
@@ -213,40 +264,40 @@ export default function GroupDetailView() {
                   onStartAdding={editor.startAdding}
                   onAddItem={editor.addItem}
                   onCancelAdding={editor.cancelAdding}
-                  splitEvenly={bill.splitEvenly}
+                  splitEvenly={splitEvenly}
                   onToggleSplitEvenly={bill.toggleSplitEvenly}
                 />
 
-                {people.people.length === 0 && !isMobile && bill.billData && (
+                {people.length === 0 && !isMobile && billData && (
                   <p className="text-sm text-muted-foreground text-center py-4 mt-4">
 {UI_TEXT.ADD_PEOPLE_TO_ASSIGN}
                   </p>
                 )}
 
                 <BillSummary
-                  billData={bill.billData}
-                  customTip={bill.customTip}
+                  billData={billData}
+                  customTip={customTip}
                   effectiveTip={bill.effectiveTip}
-                  customTax={bill.customTax}
+                  customTax={customTax}
                   effectiveTax={bill.effectiveTax}
-                  onTipChange={bill.setCustomTip}
-                  onTaxChange={bill.setCustomTax}
+                  onTipChange={setCustomTip}
+                  onTaxChange={setCustomTax}
                 />
               </Card>
 
               <SplitSummary
                 personTotals={bill.personTotals}
                 allItemsAssigned={bill.allItemsAssigned}
-                people={people.people}
-                billData={bill.billData}
-                itemAssignments={bill.itemAssignments}
+                people={people}
+                billData={billData}
+                itemAssignments={itemAssignments}
               />
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="manual" className="space-y-6">
-          {bill.billData && (
+          {billData && (
             <div className="flex justify-end">
               <button
                 onClick={handleStartOver}
@@ -259,18 +310,18 @@ export default function GroupDetailView() {
 
           <div className="space-y-6">
             <PeopleManager
-              people={people.people}
-              newPersonName={people.newPersonName}
-              newPersonVenmoId={people.newPersonVenmoId}
-              useNameAsVenmoId={people.useNameAsVenmoId}
-              onNameChange={people.setNewPersonName}
-              onVenmoIdChange={people.setNewPersonVenmoId}
-              onUseNameAsVenmoIdChange={people.setUseNameAsVenmoId}
-              onAdd={people.addPerson}
-              onAddFromFriend={people.addFromFriend}
+              people={people}
+              newPersonName={peopleManager.newPersonName}
+              newPersonVenmoId={peopleManager.newPersonVenmoId}
+              useNameAsVenmoId={peopleManager.useNameAsVenmoId}
+              onNameChange={peopleManager.setNewPersonName}
+              onVenmoIdChange={peopleManager.setNewPersonVenmoId}
+              onUseNameAsVenmoIdChange={peopleManager.setUseNameAsVenmoId}
+              onAdd={peopleManager.addPerson}
+              onAddFromFriend={peopleManager.addFromFriend}
               onRemove={handleRemovePerson}
-              onSaveAsFriend={people.savePersonAsFriend}
-              setPeople={people.setPeople}
+              onSaveAsFriend={peopleManager.savePersonAsFriend}
+              setPeople={setPeople}
             />
 
             <Card className="p-4 md:p-6">
@@ -280,19 +331,19 @@ export default function GroupDetailView() {
                   <h3 className="text-xl font-semibold">Bill Items</h3>
                 </div>
 
-                {people.people.length > 0 && !isMobile && (
+                {people.length > 0 && !isMobile && (
                   <AssignmentModeToggle
-                    mode={bill.assignmentMode}
-                    onModeChange={bill.setAssignmentMode}
+                    mode={assignmentMode}
+                    onModeChange={setAssignmentMode}
                   />
                 )}
               </div>
 
               <BillItems
-                billData={bill.billData}
-                people={people.people}
-                itemAssignments={bill.itemAssignments}
-                assignmentMode={bill.assignmentMode}
+                billData={billData}
+                people={people}
+                itemAssignments={itemAssignments}
+                assignmentMode={assignmentMode}
                 editingItemId={editor.editingItemId}
                 editingItemName={editor.editingItemName}
                 editingItemPrice={editor.editingItemPrice}
@@ -311,36 +362,36 @@ export default function GroupDetailView() {
                 onStartAdding={editor.startAdding}
                 onAddItem={editor.addItem}
                 onCancelAdding={editor.cancelAdding}
-                splitEvenly={bill.splitEvenly}
+                splitEvenly={splitEvenly}
                 onToggleSplitEvenly={bill.toggleSplitEvenly}
               />
 
-              {people.people.length === 0 && !isMobile && bill.billData && (
+              {people.length === 0 && !isMobile && billData && (
                 <p className="text-sm text-muted-foreground text-center py-4 mt-4">
                   Add people above to assign items
                 </p>
               )}
 
-              {bill.billData && (
+              {billData && (
                 <BillSummary
-                  billData={bill.billData}
-                  customTip={bill.customTip}
+                  billData={billData}
+                  customTip={customTip}
                   effectiveTip={bill.effectiveTip}
-                  customTax={bill.customTax}
+                  customTax={customTax}
                   effectiveTax={bill.effectiveTax}
-                  onTipChange={bill.setCustomTip}
-                  onTaxChange={bill.setCustomTax}
+                  onTipChange={setCustomTip}
+                  onTaxChange={setCustomTax}
                 />
               )}
             </Card>
 
-            {bill.billData && (
+            {billData && (
               <SplitSummary
                 personTotals={bill.personTotals}
                 allItemsAssigned={bill.allItemsAssigned}
-                people={people.people}
-                billData={bill.billData}
-                itemAssignments={bill.itemAssignments}
+                people={people}
+                billData={billData}
+                itemAssignments={itemAssignments}
               />
             )}
           </div>

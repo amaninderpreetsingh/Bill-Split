@@ -3,6 +3,7 @@ import { getAuth, GoogleAuthProvider, initializeAuth, indexedDBLocalPersistence 
 import { getAnalytics } from 'firebase/analytics';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 import { Capacitor } from '@capacitor/core';
 
 const firebaseConfig = {
@@ -30,6 +31,9 @@ export const db = getFirestore(app);
 
 // Initialize Storage
 export const storage = getStorage(app);
+
+// Initialize Functions
+export const functions = getFunctions(app);
 
 // Initialize Analytics (optional)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;

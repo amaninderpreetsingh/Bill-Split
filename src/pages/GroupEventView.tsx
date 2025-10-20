@@ -3,15 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CreateGroupDialog } from '@/components/groups/CreateGroupDialog';
 import { GroupCard } from '@/components/groups/GroupCard';
 import { useGroupManager } from '@/hooks/useGroupManager';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export default function GroupEventView() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { groups, loading, createGroup } = useGroupManager();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<{ id: string; name: string } | null>(null);
+  const { groups, loading, createGroup, deleteGroup } = useGroupManager();
   const { toast } = useToast();
 
   const handleCreateGroup = async (name: string, description: string) => {
@@ -33,6 +47,35 @@ export default function GroupEventView() {
 
   const handleGroupClick = (groupId: string) => {
     navigate(`/groups/${groupId}`);
+  };
+
+  const handleDeleteGroup = (groupId: string) => {
+    const group = groups.find((g) => g.id === groupId);
+    if (!group) return;
+
+    setGroupToDelete({ id: groupId, name: group.name });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteGroup = async () => {
+    if (!groupToDelete) return;
+
+    try {
+      await deleteGroup(groupToDelete.id);
+      toast({
+        title: 'Group deleted',
+        description: `${groupToDelete.name} has been deleted successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete group. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setGroupToDelete(null);
+    }
   };
 
   return (
@@ -79,6 +122,8 @@ export default function GroupEventView() {
               key={group.id}
               group={group}
               onClick={() => handleGroupClick(group.id)}
+              onDelete={handleDeleteGroup}
+              currentUserId={user?.uid}
             />
           ))}
         </div>
@@ -89,6 +134,23 @@ export default function GroupEventView() {
         onOpenChange={setDialogOpen}
         onCreateGroup={handleCreateGroup}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Group</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{groupToDelete?.name}"? This action cannot be undone and will remove all associated transactions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteGroup} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Feature Cards */}
       <div className="grid md:grid-cols-3 gap-6 mt-12">

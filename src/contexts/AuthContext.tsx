@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { User, signInWithPopup, signInWithCredential, GoogleAuthProvider, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
-import { auth, googleProvider } from '@/config/firebase';
+import { auth, googleProvider, db } from '@/config/firebase';
+import { collection, query, where, getDocs, updateDoc, doc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
@@ -31,6 +32,58 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Function to check and accept pending group invitations
+  const checkAndAcceptInvitations = async (currentUser: User) => {
+    if (!currentUser.email) return;
+
+    try {
+      // Query for groups where this user's email is in pendingInvites
+      const groupsRef = collection(db, 'groups');
+      const q = query(groupsRef, where('pendingInvites', 'array-contains', currentUser.email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const groupsToJoin = querySnapshot.docs.length;
+
+        // Process each group invitation
+        for (const groupDoc of querySnapshot.docs) {
+          const groupRef = doc(db, 'groups', groupDoc.id);
+
+          // Add user to memberIds and remove from pendingInvites
+          await updateDoc(groupRef, {
+            memberIds: arrayUnion(currentUser.uid),
+            pendingInvites: arrayRemove(currentUser.email),
+          });
+
+          // Update invitation status
+          const invitationsRef = collection(db, 'groupInvitations');
+          const inviteQuery = query(
+            invitationsRef,
+            where('email', '==', currentUser.email),
+            where('groupId', '==', groupDoc.id),
+            where('status', '==', 'pending')
+          );
+          const inviteSnapshot = await getDocs(inviteQuery);
+
+          for (const inviteDoc of inviteSnapshot.docs) {
+            await updateDoc(doc(db, 'groupInvitations', inviteDoc.id), {
+              status: 'accepted',
+            });
+          }
+        }
+
+        // Show success message
+        toast({
+          title: 'Welcome to your groups!',
+          description: `You've been added to ${groupsToJoin} ${groupsToJoin === 1 ? 'group' : 'groups'}.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error accepting group invitations:', error);
+      // Don't show error to user - this is a background operation
+    }
+  };
+
   // Custom auth state implementation with timeout (replaces useAuthState hook)
   useEffect(() => {
     // Force loading to false after 3 seconds if Firebase doesn't respond
@@ -43,9 +96,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen to Firebase auth state changes
     const unsubscribe = onAuthStateChanged(
       auth,
-      (currentUser) => {
+      async (currentUser) => {
         clearTimeout(timeout);
         setUser(currentUser);
+
+        // Check for pending group invitations when user logs in
+        if (currentUser) {
+          await checkAndAcceptInvitations(currentUser);
+        }
+
         setLoading(false);
       },
       (error) => {

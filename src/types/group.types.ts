@@ -6,6 +6,18 @@ export interface Group {
   updatedAt: Date;
   ownerId: string;
   memberIds: string[];
+  pendingInvites?: string[]; // Emails of users who have been invited but haven't joined
+}
+
+export interface GroupInvitation {
+  id: string;
+  groupId: string;
+  groupName: string;
+  email: string;
+  invitedBy: string;
+  invitedByName: string;
+  invitedAt: Date;
+  status: 'pending' | 'accepted' | 'declined';
 }
 
 export interface GroupTransaction {

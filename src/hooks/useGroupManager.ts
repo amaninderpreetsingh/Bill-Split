@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, query, where, onSnapshot, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, query, where, onSnapshot, Timestamp, orderBy } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Group } from '@/types/group.types';
@@ -70,9 +70,19 @@ export function useGroupManager() {
     return docRef.id;
   };
 
+  const deleteGroup = async (groupId: string) => {
+    if (!user) {
+      throw new Error('Must be logged in to delete a group');
+    }
+
+    const docRef = doc(db, 'groups', groupId);
+    await deleteDoc(docRef);
+  };
+
   return {
     groups,
     loading,
     createGroup,
+    deleteGroup,
   };
 }
